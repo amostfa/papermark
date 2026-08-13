@@ -169,7 +169,9 @@ function extractRequestedExports(clause) {
     }
   }
 
-  const prefix = (braceStart >= 0 ? normalized.slice(0, braceStart) : normalized)
+  const prefix = (
+    braceStart >= 0 ? normalized.slice(0, braceStart) : normalized
+  )
     .replace(/,\s*$/, "")
     .trim();
   if (prefix && !prefix.startsWith("*")) requested.push("default");
@@ -307,7 +309,9 @@ function validateManifest(manifest) {
   }
 
   if (!manifest?.moduleAliases?.exact || !manifest?.moduleAliases?.wildcard) {
-    errors.push("manifest.moduleAliases must define exact and wildcard aliases");
+    errors.push(
+      "manifest.moduleAliases must define exact and wildcard aliases",
+    );
   }
   return errors;
 }
@@ -351,14 +355,15 @@ export async function auditBoundary({
     if (!actualEeFiles.includes(file)) errors.push(`missing EE file: ${file}`);
   }
 
-  const tsconfig = JSON.parse(await readFile(path.join(root, "tsconfig.json"), "utf8"));
+  const tsconfig = JSON.parse(
+    await readFile(path.join(root, "tsconfig.json"), "utf8"),
+  );
   const configuredPaths = tsconfig?.compilerOptions?.paths || {};
   const expectedPaths = {
     ...Object.fromEntries(
-      Object.entries(manifest.moduleAliases.exact).map(([specifier, target]) => [
-        specifier,
-        [target],
-      ]),
+      Object.entries(manifest.moduleAliases.exact).map(
+        ([specifier, target]) => [specifier, [target]],
+      ),
     ),
     [manifest.moduleAliases.wildcard.specifier]: [
       manifest.moduleAliases.wildcard.target,
@@ -414,7 +419,10 @@ export async function auditBoundary({
           path.dirname(absoluteFile),
           reference.specifier,
         );
-        if (resolved === eeRoot || resolved.startsWith(`${eeRoot}${path.sep}`)) {
+        if (
+          resolved === eeRoot ||
+          resolved.startsWith(`${eeRoot}${path.sep}`)
+        ) {
           relativeEeReferences.push(reference);
         }
       }

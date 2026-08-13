@@ -13,7 +13,11 @@ export function runGit(root, args, { allowFailure = false } = {}) {
 
   if (result.error) throw result.error;
   if (!allowFailure && result.status !== 0) {
-    const detail = (result.stderr || result.stdout || "unknown git error").trim();
+    const detail = (
+      result.stderr ||
+      result.stdout ||
+      "unknown git error"
+    ).trim();
     throw new Error(`git ${args.join(" ")} failed: ${detail}`);
   }
 
@@ -52,9 +56,9 @@ export async function reapplyEeOverlay({ root, manifest: suppliedManifest }) {
     runGit(root, ["ls-files", "-z", "--", "ee"]).stdout,
   );
   const present = await listEeFiles(root);
-  const knownEePaths = [...new Set([...tracked, ...present, ...unmerged])].filter(
-    (file) => file === "ee" || file.startsWith("ee/"),
-  );
+  const knownEePaths = [
+    ...new Set([...tracked, ...present, ...unmerged]),
+  ].filter((file) => file === "ee" || file.startsWith("ee/"));
   const unexpected = knownEePaths.filter((file) => !allowed.has(file));
   const isMerging = mergeInProgress(root);
   const restored = isMerging

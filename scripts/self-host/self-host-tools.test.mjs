@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -41,7 +41,11 @@ const fixtureManifest = {
 test("boundary audit rejects new EE files, relative imports, and exports", async () => {
   await withTemporaryDirectory(async (root) => {
     await write(root, "ee/LICENSE.md", "license\n");
-    await write(root, "scripts/self-host/tool.mjs", "export const safe = true;\n");
+    await write(
+      root,
+      "scripts/self-host/tool.mjs",
+      "export const safe = true;\n",
+    );
     await write(
       root,
       "ee/stubs.tsx",
@@ -98,7 +102,11 @@ test("overlay resolver replaces EE changes but leaves core conflicts", async () 
     await write(root, "ee/LICENSE.md", "license\n");
     await write(root, "ee/stubs.tsx", "export const source = 'base';\n");
     await write(root, "ee/enterprise.ts", "export const source = 'base';\n");
-    await write(root, "scripts/self-host/tool.mjs", "export const source = 'base';\n");
+    await write(
+      root,
+      "scripts/self-host/tool.mjs",
+      "export const source = 'base';\n",
+    );
     await write(root, "core.ts", "export const source = 'base';\n");
     runGit(root, ["add", "."]);
     runGit(root, ["commit", "-m", "base"]);
@@ -157,7 +165,10 @@ test("overlay resolver replaces EE changes but leaves core conflicts", async () 
       await readFile(path.join(root, "scripts/self-host/tool.mjs"), "utf8"),
       "export const source = 'self-host';\n",
     );
-    assert.deepEqual(result.restoredSelfHostFiles, fixtureManifest.selfHostFiles);
+    assert.deepEqual(
+      result.restoredSelfHostFiles,
+      fixtureManifest.selfHostFiles,
+    );
     assert.ok(result.removed.includes("ee/enterprise.ts"));
     assert.ok(result.removed.includes("ee/new-enterprise.ts"));
   });

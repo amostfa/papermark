@@ -10,10 +10,7 @@ import { repositoryRoot } from "./boundary-lib.mjs";
 const port = Number.parseInt(process.env.SELF_HOST_SMOKE_PORT || "3017", 10);
 const hostname = "127.0.0.1";
 const appHost = `localhost:${port}`;
-const nextCli = path.join(
-  repositoryRoot,
-  "node_modules/next/dist/bin/next",
-);
+const nextCli = path.join(repositoryRoot, "node_modules/next/dist/bin/next");
 const buildId = path.join(repositoryRoot, ".next/BUILD_ID");
 let logs = "";
 
@@ -59,7 +56,9 @@ async function waitForServer(child) {
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
     if (child.exitCode !== null) {
-      throw new Error(`Next.js exited before becoming ready (${child.exitCode})`);
+      throw new Error(
+        `Next.js exited before becoming ready (${child.exitCode})`,
+      );
     }
     try {
       await request({ pathname: "/login" });
@@ -103,20 +102,24 @@ try {
   await waitForServer(server);
 
   const login = await request({ pathname: "/login" });
-  if (login.status !== 200 || !login.body.includes("<title>Login | Papermark")) {
+  if (
+    login.status !== 200 ||
+    !login.body.includes("<title>Login | Papermark")
+  ) {
     throw new Error(
       `login smoke check failed: status=${login.status}, title missing=${!login.body.includes("<title>Login | Papermark")}`,
     );
   }
 
   const eeApi = await request({
-    pathname:
-      "/api/teams/self-host/datarooms/self-host/apply-template",
+    pathname: "/api/teams/self-host/datarooms/self-host/apply-template",
     method: "POST",
     body: "{}",
   });
   if (eeApi.status !== 404) {
-    throw new Error(`EE API smoke check returned ${eeApi.status}, expected 404`);
+    throw new Error(
+      `EE API smoke check returned ${eeApi.status}, expected 404`,
+    );
   }
   const payload = JSON.parse(eeApi.body);
   if (!String(payload.error).includes("Enterprise Edition feature")) {

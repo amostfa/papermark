@@ -51,15 +51,16 @@ try {
     manifest,
   });
   if (beforeAudit.errors.length > 0) {
-    printErrors("The current self-host boundary is invalid:", beforeAudit.errors);
+    printErrors(
+      "The current self-host boundary is invalid:",
+      beforeAudit.errors,
+    );
     process.exit(1);
   }
 
-  const existingRemote = runGit(
-    repositoryRoot,
-    ["remote", "get-url", remote],
-    { allowFailure: true },
-  );
+  const existingRemote = runGit(repositoryRoot, ["remote", "get-url", remote], {
+    allowFailure: true,
+  });
   if (existingRemote.status !== 0) {
     runGit(repositoryRoot, ["remote", "add", remote, url]);
     console.log(`Added ${remote} remote: ${url}`);
@@ -78,7 +79,9 @@ try {
       { allowFailure: true },
     ).status === 0;
   if (alreadyCurrent) {
-    console.log(`${upstreamRef} is already contained in HEAD; nothing to sync.`);
+    console.log(
+      `${upstreamRef} is already contained in HEAD; nothing to sync.`,
+    );
     process.exit(0);
   }
 
@@ -122,13 +125,17 @@ try {
       "Upstream changed the EE import surface and the compatibility layer needs attention:",
       afterAudit.errors,
     );
-    console.error("The merge remains uncommitted so it can be reviewed or aborted.");
+    console.error(
+      "The merge remains uncommitted so it can be reviewed or aborted.",
+    );
     process.exit(1);
   }
 
   console.log(formatBoundarySummary(afterAudit.summary));
   console.log("Upstream is merged and staged, but not committed.");
-  console.log("Run the self-host verification suite, review the diff, then commit.");
+  console.log(
+    "Run the self-host verification suite, review the diff, then commit.",
+  );
 } catch (error) {
   console.error("Unable to sync upstream safely:");
   console.error(error instanceof Error ? error.message : error);
