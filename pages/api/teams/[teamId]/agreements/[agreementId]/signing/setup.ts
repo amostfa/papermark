@@ -17,10 +17,6 @@ import {
 import { setupSigningTemplateTask } from "@/lib/trigger/setup-signing-template";
 import { CustomUser } from "@/lib/types";
 
-export const config = {
-  maxDuration: 60,
-};
-
 const setupSigningTemplateSchema = z.object({
   fileName: z.string().trim().min(1).optional(),
   contentType: z.literal(SIGNING_TEMPLATE_PDF_CONTENT_TYPE),

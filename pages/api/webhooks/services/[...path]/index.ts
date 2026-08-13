@@ -38,7 +38,6 @@ import { webhookFileUrlSchema } from "@/lib/zod/url-validation";
 export const config = {
   // in order to enable `waitUntil` function
   supportsResponseStreaming: true,
-  maxDuration: 120,
 };
 
 const MAX_WEBHOOK_FILE_BYTES = 100 * 1024 * 1024;

@@ -21,12 +21,8 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 // PUT can save thousands of permission rows in a single payload (think
-// "select all" on a large dataroom). With the bulk-SQL path below this is
-// now ~3-4 round-trips total, but we still bump the platform timeout to be
-// safe — same as the neighbouring `groups/[groupId]/permissions.ts`.
-export const config = {
-  maxDuration: 300,
-};
+// "select all" on a large dataroom). The bulk-SQL path below keeps this to
+// roughly 3-4 database round-trips.
 
 // Zod schema for validating permissions
 const itemPermissionSchema = z.object({

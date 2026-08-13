@@ -16,7 +16,6 @@ import { lockerRedisClient } from "@/lib/redis";
 import { log } from "@/lib/utils";
 
 export const config = {
-  maxDuration: 60,
   api: {
     bodyParser: false,
   },

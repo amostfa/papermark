@@ -14,10 +14,6 @@ import {
 import { ensureFileExtension } from "@/lib/utils/get-content-type";
 import { getIpAddress } from "@/lib/utils/ip";
 
-export const config = {
-  maxDuration: 300,
-};
-
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,

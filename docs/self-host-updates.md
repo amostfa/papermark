@@ -16,6 +16,13 @@ The year-in-review Open Graph route intentionally embeds a single font. Two
 embedded TTF files push that Edge Function over Vercel's 1 MB plan limit, so
 preserve the single-font pattern when resolving upstream changes to that route.
 
+Vercel Hobby deployments intentionally inherit the shared Fluid Compute
+duration and memory defaults. Route-specific `maxDuration` exports or a
+non-empty `functions` object in `vercel.json` split otherwise compatible routes
+into additional functions. `npm run selfhost:check` rejects those overrides so
+an upstream update cannot silently reintroduce the 12-function deployment
+failure.
+
 ## One-time GitHub setup
 
 After these files reach `main`, open **Settings → Actions → General** and enable

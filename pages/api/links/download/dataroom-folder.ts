@@ -8,13 +8,6 @@ import { downloadJobStore } from "@/lib/redis-download-job-store";
 import { bulkDownloadTask } from "@/lib/trigger/bulk-download";
 import { getIpAddress } from "@/lib/utils/ip";
 
-export const config = {
-  // Lightweight handler: validate access + create job + trigger task. The
-  // heavy folder/document/permission queries and view inserts run inside the
-  // trigger task so the viewer never sees a request timeout.
-  maxDuration: 60,
-};
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,

@@ -17,12 +17,8 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 // Saving thousands of permission rows in a single payload is a normal
-// operation here (think "select all" on a large dataroom). With the bulk-SQL
-// path below this is now ~3 round-trips total, but we still bump the
-// platform timeout to be safe — same as the neighbouring `invite.ts`.
-export const config = {
-  maxDuration: 300,
-};
+// operation here (think "select all" on a large dataroom). The bulk-SQL path
+// below keeps this to roughly 3 database round-trips.
 
 export default async function handler(
   req: NextApiRequest,

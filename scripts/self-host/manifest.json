@@ -13,6 +13,7 @@
     "scripts/self-host/apply-ee-overlay.mjs",
     "scripts/self-host/boundary-lib.mjs",
     "scripts/self-host/check-boundary.mjs",
+    "scripts/self-host/check-vercel-config.mjs",
     "scripts/self-host/git-lib.mjs",
     "scripts/self-host/manifest.json",
     "scripts/self-host/self-host-tools.test.mjs",

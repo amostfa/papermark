@@ -4,7 +4,6 @@ import { handleBulkLinkImport } from "@/lib/api/links/bulk-import";
 
 export const config = {
   supportsResponseStreaming: true,
-  maxDuration: 120,
 };
 
 export default async function handle(

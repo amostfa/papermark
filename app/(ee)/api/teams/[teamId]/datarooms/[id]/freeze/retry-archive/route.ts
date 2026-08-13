@@ -14,8 +14,6 @@ import { dataroomFreezeArchiveTask } from "@/ee/features/dataroom-freeze/lib/tri
 import { CustomUser } from "@/lib/types";
 import { generateTriggerPublicAccessToken } from "@/lib/utils/generate-trigger-auth-token";
 
-export const maxDuration = 60;
-
 export async function POST(
   _request: NextRequest,
   { params }: { params: { teamId: string; id: string } },
