@@ -8,6 +8,10 @@ Passkey login is optional. Configure both `HANKO_API_KEY` and
 `NEXT_PUBLIC_HANKO_TENANT_ID` to enable it; when either is absent, the provider
 and login control remain disabled without blocking the build.
 
+Slack notifications are also optional. Their client is inert until a Slack
+operation is requested; Slack-specific routes validate their variables when
+used instead of blocking unrelated application routes during startup.
+
 ## One-time GitHub setup
 
 After these files reach `main`, open **Settings → Actions → General** and enable
