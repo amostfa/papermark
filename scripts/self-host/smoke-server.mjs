@@ -9,7 +9,8 @@ import { repositoryRoot } from "./boundary-lib.mjs";
 
 const port = Number.parseInt(process.env.SELF_HOST_SMOKE_PORT || "3017", 10);
 const hostname = "127.0.0.1";
-const appHost = `localhost:${port}`;
+const appHost =
+  process.env.NEXT_PUBLIC_APP_BASE_HOST?.trim() || `localhost:${port}`;
 const nextCli = path.join(repositoryRoot, "node_modules/next/dist/bin/next");
 const buildId = path.join(repositoryRoot, ".next/BUILD_ID");
 let logs = "";
@@ -140,7 +141,7 @@ try {
   }
 
   console.log("Self-host production smoke checks passed:");
-  console.log("  login page: 200");
+  console.log(`  configured app host (${appHost}) login page: 200`);
   console.log("  year-in-review image: 200 image/png");
   console.log("  disabled EE API: 404");
 } catch (error) {

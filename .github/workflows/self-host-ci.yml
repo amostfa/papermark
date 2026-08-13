@@ -30,7 +30,9 @@ env:
   NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY: 0123456789abcdef0123456789abcdef
   NEXT_PRIVATE_UNSUBSCRIBE_JWT_SECRET: self-host-ci-unsubscribe-secret
   NEXT_PRIVATE_VERIFICATION_SECRET: self-host-ci-verification-secret
-  NEXT_PUBLIC_APP_BASE_HOST: localhost
+  # Use a non-Papermark hostname so the smoke test catches regressions where
+  # middleware mistakes the configured self-host app for a viewer vanity domain.
+  NEXT_PUBLIC_APP_BASE_HOST: docs.bonumworks.com
   NEXT_PUBLIC_BASE_URL: http://localhost:3017
   NEXT_PUBLIC_MARKETING_URL: http://localhost:3017
   NEXT_PUBLIC_UPLOAD_TRANSPORT: vercel

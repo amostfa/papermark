@@ -23,6 +23,12 @@ into additional functions. `npm run selfhost:check` rejects those overrides so
 an upstream update cannot silently reintroduce the 12-function deployment
 failure.
 
+The middleware must also exempt `NEXT_PUBLIC_APP_BASE_HOST` from Papermark's
+document-view custom-domain routing. Otherwise a self-hosted application domain
+such as `docs.bonumworks.com` is rewritten as a viewer vanity domain. The same
+check rejects an upstream update that drops this exception, and the production
+smoke test sends its login request through a non-Papermark app hostname.
+
 ## One-time GitHub setup
 
 After these files reach `main`, open **Settings → Actions → General** and enable

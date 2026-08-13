@@ -57,21 +57,36 @@ async function findVercelJsonOverrides() {
   ];
 }
 
+async function findAppHostRoutingViolations() {
+  const middlewarePath = path.join(repositoryRoot, "middleware.ts");
+  const middleware = await readFile(middlewarePath, "utf8");
+  const customDomainFunction = middleware.match(
+    /function isCustomDomain\([^)]*\)\s*\{[\s\S]*?\n\}/,
+  )?.[0];
+
+  if (customDomainFunction?.includes("process.env.NEXT_PUBLIC_APP_BASE_HOST")) {
+    return [];
+  }
+
+  return [
+    "middleware.ts: isCustomDomain must exempt NEXT_PUBLIC_APP_BASE_HOST",
+  ];
+}
+
 try {
   const violations = [
     ...(await findRouteOverrides()),
     ...(await findVercelJsonOverrides()),
+    ...(await findAppHostRoutingViolations()),
   ];
 
   if (violations.length > 0) {
-    console.error(
-      "Vercel Hobby configuration is not normalized; remove route-specific function settings:",
-    );
+    console.error("Vercel self-host configuration is unsafe:");
     for (const violation of violations) console.error(`  - ${violation}`);
     process.exitCode = 1;
   } else {
     console.log(
-      "Vercel Hobby configuration is normalized for automatic function bundling.",
+      "Vercel self-host configuration preserves route bundling and app-host routing.",
     );
   }
 } catch (error) {
