@@ -10,6 +10,16 @@ export const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
+function configuredFromAddress(name: string): string {
+  const value = process.env[name]?.trim();
+
+  if (!value) {
+    throw new Error(`${name} is not configured`);
+  }
+
+  return value;
+}
+
 export const sendEmail = async ({
   to,
   subject,
@@ -52,7 +62,7 @@ export const sendEmail = async ({
     (marketing
       ? "Marc from Papermark <marc@updates.papermark.com>"
       : system
-        ? "Papermark <system@papermark.com>"
+        ? configuredFromAddress("RESEND_FROM_EMAIL")
         : verify
           ? "Papermark <system@verify.papermark.com>"
           : !!scheduledAt

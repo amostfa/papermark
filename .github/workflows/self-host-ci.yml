@@ -95,6 +95,9 @@ jobs:
           npm exec -- prisma migrate deploy
           npm exec -- prisma migrate status
 
+      - name: Test database-backed email authentication
+        run: npm run selfhost:auth-db-smoke
+
       - name: Build production application
         run: npm run build
 

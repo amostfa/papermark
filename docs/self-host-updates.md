@@ -12,6 +12,20 @@ Slack notifications are also optional. Their client is inert until a Slack
 operation is requested; Slack-specific routes validate their variables when
 used instead of blocking unrelated application routes during startup.
 
+Email-code login uses the existing PostgreSQL database for its short-lived
+codes and abuse rate limits; it does not require Upstash Redis. Apply every
+Prisma migration before starting the application. Configure `RESEND_API_KEY`
+and `RESEND_FROM_EMAIL` with a sender on a domain verified in Resend, for
+example `Papermark <noreply@send.example.com>`. The sender does not need to be a
+mailbox, and a dedicated sending subdomain avoids interfering with an existing
+mail provider. Authentication waits for Resend to accept the message, so a
+delivery configuration failure is reported instead of showing a false success.
+
+The self-host checks preserve this PostgreSQL-only login path during upstream
+updates. CI also exercises concurrent code issuance, one-time consumption,
+expiration, failed-delivery cleanup, and rate limiting against its disposable
+database.
+
 The year-in-review Open Graph route intentionally embeds a single font. Two
 embedded TTF files push that Edge Function over Vercel's 1 MB plan limit, so
 preserve the single-font pattern when resolving upstream changes to that route.

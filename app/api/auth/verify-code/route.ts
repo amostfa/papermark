@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchAndDeleteLoginCodeData } from "@/lib/emails/send-verification-request";
-import { ratelimit } from "@/lib/redis";
-
-// Rate limiters
-const emailRateLimit = ratelimit(5, "1 m"); // 5 attempts per minute per email
-const ipRateLimit = ratelimit(10, "1 m"); // 10 attempts per minute per IP
+import {
+  consumeAuthRateLimit,
+  fetchAndDeleteLoginCodeData,
+} from "@/lib/auth/login-code";
 
 function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -43,8 +41,18 @@ export async function POST(request: NextRequest) {
 
     // Check both rate limits
     const [emailLimit, ipLimit] = await Promise.all([
-      emailRateLimit.limit(`verify_code:${normalizedEmail}`),
-      ipRateLimit.limit(`verify_code:ip:${ip}`),
+      consumeAuthRateLimit({
+        scope: "verify-code-email",
+        subject: normalizedEmail,
+        limit: 5,
+        windowMs: 60 * 1000,
+      }),
+      consumeAuthRateLimit({
+        scope: "verify-code-ip",
+        subject: ip,
+        limit: 10,
+        windowMs: 60 * 1000,
+      }),
     ]);
 
     if (!emailLimit.success) {

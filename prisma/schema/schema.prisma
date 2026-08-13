@@ -140,6 +140,26 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model LoginCode {
+  email       String
+  code        String
+  callbackUrl String   @db.Text
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@id([email, code])
+  @@index([expiresAt])
+}
+
+model AuthRateLimit {
+  key       String   @id
+  count     Int
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
 model Domain {
   id          String   @id @default(cuid())
   slug        String   @unique
