@@ -38,6 +38,7 @@ function request({ pathname, method = "GET", body }) {
         response.on("end", () =>
           resolve({
             body: Buffer.concat(chunks).toString("utf8"),
+            contentType: response.headers["content-type"],
             status: response.statusCode,
           }),
         );
@@ -111,6 +112,18 @@ try {
     );
   }
 
+  const yearInReviewImage = await request({
+    pathname: "/api/og/yir?year=2026&minutesSpentOnDocs=1000",
+  });
+  if (
+    yearInReviewImage.status !== 200 ||
+    !yearInReviewImage.contentType?.startsWith("image/png")
+  ) {
+    throw new Error(
+      `year-in-review image smoke check failed: status=${yearInReviewImage.status}, content-type=${yearInReviewImage.contentType}`,
+    );
+  }
+
   const eeApi = await request({
     pathname: "/api/teams/self-host/datarooms/self-host/apply-template",
     method: "POST",
@@ -128,6 +141,7 @@ try {
 
   console.log("Self-host production smoke checks passed:");
   console.log("  login page: 200");
+  console.log("  year-in-review image: 200 image/png");
   console.log("  disabled EE API: 404");
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);

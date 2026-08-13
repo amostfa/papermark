@@ -12,6 +12,10 @@ Slack notifications are also optional. Their client is inert until a Slack
 operation is requested; Slack-specific routes validate their variables when
 used instead of blocking unrelated application routes during startup.
 
+The year-in-review Open Graph route intentionally embeds a single font. Two
+embedded TTF files push that Edge Function over Vercel's 1 MB plan limit, so
+preserve the single-font pattern when resolving upstream changes to that route.
+
 ## One-time GitHub setup
 
 After these files reach `main`, open **Settings → Actions → General** and enable
@@ -50,8 +54,8 @@ newer upstream update.
 The verification workflow uses a disposable PostgreSQL 16 database, applies
 every Prisma migration, builds the production application, runs an independent
 type-check against Next.js's generated declarations, boots it, and checks the
-login page and a disabled EE API. It never uses a production database or
-deploys the application.
+login page, the size-sensitive year-in-review image route, and a disabled EE
+API. It never uses a production database or deploys the application.
 
 The sync job has repository write access but does not install or execute
 upstream dependencies. The separately dispatched verification job executes
