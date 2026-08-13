@@ -4,6 +4,10 @@ The self-host layer is intentionally fail-closed. Upstream application changes
 merge normally, while the contents of `ee/` are constrained by
 `scripts/self-host/manifest.json`.
 
+Passkey login is optional. Configure both `HANKO_API_KEY` and
+`NEXT_PUBLIC_HANKO_TENANT_ID` to enable it; when either is absent, the provider
+and login control remain disabled without blocking the build.
+
 ## One-time GitHub setup
 
 After these files reach `main`, open **Settings → Actions → General** and enable

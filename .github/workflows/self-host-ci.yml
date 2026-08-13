@@ -26,7 +26,6 @@ concurrency:
 
 env:
   BLOB_READ_WRITE_TOKEN: vercel_blob_rw_self_host_ci
-  HANKO_API_KEY: self-host-ci-hanko-key
   NEXT_DISABLE_WEBPACK_CACHE: "1"
   NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY: 0123456789abcdef0123456789abcdef
   NEXT_PRIVATE_SLACK_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
@@ -34,7 +33,6 @@ env:
   NEXT_PRIVATE_VERIFICATION_SECRET: self-host-ci-verification-secret
   NEXT_PUBLIC_APP_BASE_HOST: localhost
   NEXT_PUBLIC_BASE_URL: http://localhost:3017
-  NEXT_PUBLIC_HANKO_TENANT_ID: self-host-ci-hanko-tenant
   NEXT_PUBLIC_MARKETING_URL: http://localhost:3017
   NEXT_PUBLIC_UPLOAD_TRANSPORT: vercel
   NEXT_PUBLIC_WEBHOOK_BASE_HOST: webhooks.localhost
