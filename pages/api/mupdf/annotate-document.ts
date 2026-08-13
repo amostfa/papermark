@@ -7,11 +7,6 @@ import {
   buildWatermarkedPdf,
 } from "@/lib/utils/watermark-pdf";
 
-// This function can run for a maximum of 300 seconds
-export const config = {
-  maxDuration: 300,
-};
-
 /**
  * Validates a URL to prevent SSRF attacks.
  * Only allows HTTPS requests to the configured distribution hosts.

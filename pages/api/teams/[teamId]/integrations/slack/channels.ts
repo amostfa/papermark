@@ -15,10 +15,6 @@ import prisma from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 
-export const config = {
-  maxDuration: 300,
-};
-
 // Channel lists rarely change, so cache them to avoid re-paginating Slack's
 // rate-limited conversations.list on every settings page visit / SWR retry.
 const CHANNELS_CACHE_TTL_SECONDS = 600; // 10 minutes

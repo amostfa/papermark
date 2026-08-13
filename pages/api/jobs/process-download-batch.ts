@@ -7,9 +7,6 @@ import { getLambdaClientForTeam } from "@/lib/files/aws-client";
 
 // Internal API endpoint for processing download batches
 // Called by Trigger.dev task - authenticated via shared secret
-export const config = {
-  maxDuration: 300, // 5 minutes for Lambda invocation
-};
 
 export default async function handler(
   req: NextApiRequest,

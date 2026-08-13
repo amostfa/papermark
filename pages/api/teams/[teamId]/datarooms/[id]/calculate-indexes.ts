@@ -12,10 +12,6 @@ import {
   clearHierarchicalIndexes,
 } from "@/lib/utils/calculate-hierarchical-indexes";
 
-export const config = {
-  maxDuration: 300,
-};
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,

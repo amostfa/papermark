@@ -29,6 +29,9 @@ export default function Login() {
   const next = searchParams?.get("next") ?? undefined;
   const authError = searchParams?.get("error");
   const isSSORequired = authError === "require-saml-sso";
+  const isPasskeyAuthConfigured = Boolean(
+    process.env.NEXT_PUBLIC_HANKO_TENANT_ID,
+  );
 
   const [lastUsed, setLastUsed] = useLastUsed();
   const authMethods = ["google", "email", "linkedin", "passkey"] as const;
@@ -203,27 +206,30 @@ export default function Login() {
                 )}
               </Button>
             </div>
-            <div className="relative">
-              <Button
-                onClick={() => {
-                  setLastUsed("passkey");
-                  setClickedMethod("passkey");
-                  signInWithPasskey({
-                    tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID as string,
-                  }).then(() => {
-                    setClickedMethod(undefined);
-                  });
-                }}
-                variant="outline"
-                loading={clickedMethod === "passkey"}
-                disabled={clickedMethod && clickedMethod !== "passkey"}
-                className="flex w-full items-center justify-center space-x-2 border border-gray-300 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
-              >
-                <Passkey className="h-4 w-4" />
-                <span>Continue with a passkey</span>
-                {lastUsed === "passkey" && <LastUsed />}
-              </Button>
-            </div>
+            {isPasskeyAuthConfigured ? (
+              <div className="relative">
+                <Button
+                  onClick={() => {
+                    setLastUsed("passkey");
+                    setClickedMethod("passkey");
+                    signInWithPasskey({
+                      tenantId: process.env
+                        .NEXT_PUBLIC_HANKO_TENANT_ID as string,
+                    }).then(() => {
+                      setClickedMethod(undefined);
+                    });
+                  }}
+                  variant="outline"
+                  loading={clickedMethod === "passkey"}
+                  disabled={clickedMethod && clickedMethod !== "passkey"}
+                  className="flex w-full items-center justify-center space-x-2 border border-gray-300 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
+                >
+                  <Passkey className="h-4 w-4" />
+                  <span>Continue with a passkey</span>
+                  {lastUsed === "passkey" ? <LastUsed /> : null}
+                </Button>
+              </div>
+            ) : null}
             <div className="relative">
               <SSOLogin autoExpand={isSSORequired} />
             </div>

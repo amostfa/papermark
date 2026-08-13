@@ -13,10 +13,6 @@ import { downloadJobStore } from "@/lib/redis-download-job-store";
 import { bulkDownloadTask } from "@/lib/trigger/bulk-download";
 import { CustomUser } from "@/lib/types";
 
-export const config = {
-  maxDuration: 60, // Reduced since we're just triggering the async task
-};
-
 type DataroomFolderRow = {
   id: string;
   name: string;

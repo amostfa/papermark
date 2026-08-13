@@ -3,10 +3,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { sendDataroomUploadNotification } from "@/lib/emails/send-dataroom-upload-notification";
 import { log } from "@/lib/utils";
 
-export const config = {
-  maxDuration: 120,
-};
-
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,

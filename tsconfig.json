@@ -16,6 +16,15 @@
     "jsx": "preserve",
     "incremental": true,
     "paths": {
+      "@/ee/features/storage/config": ["./ee/features/storage/config"],
+      "@/ee/features/storage/s3-store": ["./ee/features/storage/s3-store"],
+      "@/ee/limits/constants": ["./ee/limits/constants"],
+      "@/ee/limits/handler": ["./ee/limits/handler"],
+      "@/ee/limits/server": ["./ee/limits/server"],
+      "@/ee/limits/swr-handler": ["./ee/limits/swr-handler"],
+      "@/ee/stripe/constants": ["./ee/stripe/constants"],
+      "@/ee/stripe/currency": ["./ee/stripe/currency"],
+      "@/ee/*": ["./ee/stubs"],
       "@/*": ["./*"]
     },
     "plugins": [

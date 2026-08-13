@@ -19,16 +19,32 @@ function isAnalyticsPath(path: string) {
   return pattern.test(path);
 }
 
+function normalizeHostname(host: string) {
+  return host.split(":")[0]?.toLowerCase().trim().replace(/\.$/, "");
+}
+
 function isCustomDomain(host: string) {
+  const hostname = normalizeHostname(host);
+  const appHostname = normalizeHostname(
+    process.env.NEXT_PUBLIC_APP_BASE_HOST || "",
+  );
+
+  // A self-hosted app domain is not a document-view vanity domain. Keep this
+  // configuration check ahead of the Papermark-owned-domain fallback so forks
+  // can safely use their own hostname.
+  if (appHostname && hostname === appHostname) {
+    return false;
+  }
+
   return (
     (process.env.NODE_ENV === "development" &&
-      (host?.includes(".local") || host?.includes("papermark.dev"))) ||
+      (hostname.includes(".local") || hostname.includes("papermark.dev"))) ||
     (process.env.NODE_ENV !== "development" &&
       !(
-        host?.includes("localhost") ||
-        host?.includes("papermark.io") ||
-        host?.includes("papermark.com") ||
-        host?.endsWith(".vercel.app")
+        hostname.includes("localhost") ||
+        hostname.includes("papermark.io") ||
+        hostname.includes("papermark.com") ||
+        hostname.endsWith(".vercel.app")
       ))
   );
 }
@@ -60,8 +76,10 @@ export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
   // The Host header carries the port for non-default ports (e.g.
   // `localhost:3000` in dev), so strip it before comparing to the env var
   // — which is set to a bare hostname.
-  const apiHost = process.env.NEXT_PUBLIC_API_BASE_HOST?.toLowerCase().trim();
-  const requestHostname = host?.split(":")[0]?.toLowerCase().trim();
+  const apiHost = normalizeHostname(
+    process.env.NEXT_PUBLIC_API_BASE_HOST || "",
+  );
+  const requestHostname = normalizeHostname(host || "");
   if (apiHost && requestHostname === apiHost) {
     if (path === "/v1" || path.startsWith("/v1/") || path === "/openapi.json") {
       return NextResponse.next();

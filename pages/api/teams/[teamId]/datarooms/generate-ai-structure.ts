@@ -15,10 +15,6 @@ import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 
-export const config = {
-  maxDuration: 120,
-};
-
 // Non-recursive folder schema with fixed depth (max 2 levels)
 // This avoids the "Recursive reference detected" error from the AI SDK
 // which cannot convert z.lazy() recursive schemas to JSON Schema properly

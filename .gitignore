@@ -59,6 +59,8 @@ scripts/*
 !scripts/check-brand-logo.ts
 !scripts/extend-trial.ts
 !scripts/local/
+!scripts/self-host/
+!scripts/self-host/**
 scripts/local/.tinybird-page-views.json
 !.github/scripts/
 

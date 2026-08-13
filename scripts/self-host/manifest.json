@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "upstream": {
+    "remote": "upstream",
+    "url": "https://github.com/papermark/papermark.git",
+    "branch": "main"
+  },
+  "selfHostFiles": [
+    ".github/upstream-self-host-pr.md",
+    ".github/workflows/self-host-ci.yml",
+    ".github/workflows/upstream-self-host-sync.yml",
+    "docs/self-host-updates.md",
+    "scripts/self-host/apply-ee-overlay.mjs",
+    "scripts/self-host/boundary-lib.mjs",
+    "scripts/self-host/check-boundary.mjs",
+    "scripts/self-host/check-vercel-config.mjs",
+    "scripts/self-host/git-lib.mjs",
+    "scripts/self-host/manifest.json",
+    "scripts/self-host/self-host-tools.test.mjs",
+    "scripts/self-host/smoke-server.mjs",
+    "scripts/self-host/sync-upstream.mjs"
+  ],
+  "eeAllowlist": [
+    "ee/LICENSE.md",
+    "ee/README.md",
+    "ee/features/storage/config.ts",
+    "ee/features/storage/s3-store.ts",
+    "ee/limits/constants.ts",
+    "ee/limits/handler.ts",
+    "ee/limits/server.ts",
+    "ee/limits/swr-handler.ts",
+    "ee/stripe/constants.ts",
+    "ee/stripe/currency.ts",
+    "ee/stubs.tsx"
+  ],
+  "moduleAliases": {
+    "exact": {
+      "@/ee/features/storage/config": "./ee/features/storage/config",
+      "@/ee/features/storage/s3-store": "./ee/features/storage/s3-store",
+      "@/ee/limits/constants": "./ee/limits/constants",
+      "@/ee/limits/handler": "./ee/limits/handler",
+      "@/ee/limits/server": "./ee/limits/server",
+      "@/ee/limits/swr-handler": "./ee/limits/swr-handler",
+      "@/ee/stripe/constants": "./ee/stripe/constants",
+      "@/ee/stripe/currency": "./ee/stripe/currency"
+    },
+    "wildcard": {
+      "specifier": "@/ee/*",
+      "target": "./ee/stubs"
+    }
+  }
+}

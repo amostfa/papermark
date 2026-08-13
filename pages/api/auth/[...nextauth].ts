@@ -14,11 +14,6 @@ import { getIpAddress } from "@/lib/utils/ip";
 
 export { authOptions } from "@/lib/auth/auth-options";
 
-// This function can run for a maximum of 180 seconds
-export const config = {
-  maxDuration: 180,
-};
-
 const getAuthOptions = (req: NextApiRequest): NextAuthOptions => {
   // ─── Shared state for the current auth request ───
   // The signIn callback runs BEFORE the user is created in the DB (for new

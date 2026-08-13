@@ -1,0 +1,167 @@
+name: Upstream self-host sync
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+  statuses: write
+
+concurrency:
+  group: upstream-self-host-sync
+  cancel-in-progress: false
+
+env:
+  GH_PROMPT_DISABLED: "1"
+  GH_TOKEN: ${{ github.token }}
+  UPDATE_BRANCH: automation/upstream-self-host-sync
+
+jobs:
+  sync:
+    name: Prepare verified upstream update
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out self-host branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Check for an open update pull request
+        id: existing_pr
+        run: |
+          pr_number=$(gh pr list \
+            --base main \
+            --head "$UPDATE_BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -n "$pr_number" ]; then
+            echo "Update PR #$pr_number is still open; leaving its verified commit unchanged."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        if: steps.existing_pr.outputs.exists != 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Configure update branch
+        if: steps.existing_pr.outputs.exists != 'true'
+        run: |
+          git config user.name "papermark-self-host[bot]"
+          git config user.email "papermark-self-host[bot]@users.noreply.github.com"
+          git switch -C "$UPDATE_BRANCH"
+
+      - name: Merge upstream and reapply EE overlay
+        if: steps.existing_pr.outputs.exists != 'true'
+        id: sync
+        run: |
+          npm run selfhost:sync-upstream
+          if git rev-parse --verify -q MERGE_HEAD >/dev/null; then
+            upstream_sha=$(git rev-parse upstream/main)
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "upstream_sha=$upstream_sha" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit update
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          short_sha=$(git rev-parse --short=12 upstream/main)
+          git commit -m "chore: sync papermark upstream $short_sha"
+
+      - name: Push dedicated automation branch
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          git fetch origin "$UPDATE_BRANCH" || true
+          git push --force-with-lease origin "HEAD:refs/heads/$UPDATE_BRANCH"
+
+      - name: Dispatch verification on update commit
+        if: steps.sync.outputs.changed == 'true'
+        id: verification
+        run: |
+          head_sha=$(git rev-parse HEAD)
+          verification_id="sync-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          run_title="Self-host compatibility ($verification_id)"
+          gh workflow run self-host-ci.yml \
+            --ref main \
+            -f candidate_sha="$head_sha" \
+            -f verification_id="$verification_id"
+
+          run_id=""
+          for attempt in $(seq 1 60); do
+            run_id=$(gh run list \
+              --workflow self-host-ci.yml \
+              --branch main \
+              --event workflow_dispatch \
+              --limit 20 \
+              --json databaseId,displayTitle \
+              --jq ".[] | select(.displayTitle == \"$run_title\") | .databaseId" \
+              | head -n 1)
+            if [ -n "$run_id" ]; then
+              break
+            fi
+            sleep 2
+          done
+
+          if [ -z "$run_id" ]; then
+            echo "Unable to locate the dispatched verification run." >&2
+            exit 1
+          fi
+
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          verification_state=success
+          if ! gh run watch "$run_id" --exit-status --interval 10; then
+            verification_state=failure
+          fi
+
+          run_url=$(gh run view "$run_id" --json url --jq .url)
+          gh api \
+            --method POST \
+            "repos/$GITHUB_REPOSITORY/statuses/$head_sha" \
+            -f state="$verification_state" \
+            -f context="self-host/verify" \
+            -f description="Self-host migration, build, and smoke verification" \
+            -f target_url="$run_url"
+
+          if [ "$verification_state" != "success" ]; then
+            exit 1
+          fi
+
+      - name: Create or update draft pull request
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          short_sha=$(git rev-parse --short=12 upstream/main)
+          title="chore: sync papermark upstream $short_sha"
+          pr_number=$(gh pr list \
+            --base main \
+            --head "$UPDATE_BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -n "$pr_number" ]; then
+            gh pr edit "$pr_number" \
+              --title "$title" \
+              --body-file .github/upstream-self-host-pr.md
+          else
+            gh pr create \
+              --base main \
+              --head "$UPDATE_BRANCH" \
+              --title "$title" \
+              --body-file .github/upstream-self-host-pr.md \
+              --draft
+          fi

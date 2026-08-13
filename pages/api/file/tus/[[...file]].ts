@@ -23,7 +23,6 @@ import {
 import { authOptions } from "../../auth/[...nextauth]";
 
 export const config = {
-  maxDuration: 60,
   api: {
     bodyParser: false,
   },

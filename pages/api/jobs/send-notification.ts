@@ -12,10 +12,6 @@ import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import type { TeamNotificationType } from "@/lib/zod/schemas/notifications";
 
-export const config = {
-  maxDuration: 60,
-};
-
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,

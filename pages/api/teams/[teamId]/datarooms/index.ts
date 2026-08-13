@@ -9,10 +9,6 @@ import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 
-export const config = {
-  maxDuration: 180,
-};
-
 const DATAROOM_PLANS = [
   "business",
   "datarooms",

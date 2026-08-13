@@ -1,0 +1,105 @@
+name: Self-host compatibility
+run-name: Self-host compatibility (${{ inputs.verification_id || inputs.candidate_sha || github.sha }})
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Commit SHA to verify with the trusted workflow
+        required: false
+        type: string
+      verification_id:
+        description: Unique label used by the upstream-sync workflow
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: self-host-${{ github.workflow }}-${{ inputs.candidate_sha || github.ref }}
+  cancel-in-progress: true
+
+env:
+  BLOB_READ_WRITE_TOKEN: vercel_blob_rw_self_host_ci
+  NEXT_DISABLE_WEBPACK_CACHE: "1"
+  NEXT_PRIVATE_DOCUMENT_PASSWORD_KEY: 0123456789abcdef0123456789abcdef
+  NEXT_PRIVATE_UNSUBSCRIBE_JWT_SECRET: self-host-ci-unsubscribe-secret
+  NEXT_PRIVATE_VERIFICATION_SECRET: self-host-ci-verification-secret
+  # Use a non-Papermark hostname so the smoke test catches regressions where
+  # middleware mistakes the configured self-host app for a viewer vanity domain.
+  NEXT_PUBLIC_APP_BASE_HOST: docs.bonumworks.com
+  NEXT_PUBLIC_BASE_URL: http://localhost:3017
+  NEXT_PUBLIC_MARKETING_URL: http://localhost:3017
+  NEXT_PUBLIC_UPLOAD_TRANSPORT: vercel
+  NEXT_PUBLIC_WEBHOOK_BASE_HOST: webhooks.localhost
+  NEXTAUTH_SECRET: self-host-ci-nextauth-secret
+  NEXTAUTH_URL: http://localhost:3017
+  POSTGRES_PRISMA_URL: postgresql://postgres:postgres@localhost:5432/papermark?schema=public
+  POSTGRES_PRISMA_URL_NON_POOLING: postgresql://postgres:postgres@localhost:5432/papermark?schema=public
+
+jobs:
+  verify:
+    name: Verify self-host deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: papermark
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d papermark"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.candidate_sha || github.sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Check EE boundary before installing dependencies
+        run: node scripts/self-host/check-boundary.mjs
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Test update tooling
+        run: npm run selfhost:test
+
+      - name: Check formatting and EE import surface
+        run: |
+          npm run selfhost:format-check
+          npm run selfhost:check
+
+      - name: Apply migrations to disposable PostgreSQL
+        run: |
+          npm exec -- prisma migrate deploy
+          npm exec -- prisma migrate status
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Type-check application with generated Next.js declarations
+        run: npm run selfhost:typecheck
+
+      - name: Boot and smoke-test production application
+        run: npm run selfhost:smoke

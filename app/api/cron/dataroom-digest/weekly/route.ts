@@ -5,7 +5,6 @@ import { processDataroomDigest } from "@/lib/emails/process-dataroom-digest";
 import { log } from "@/lib/utils";
 
 // Runs weekly on Monday at 9 AM UTC (0 9 * * 1)
-export const maxDuration = 300;
 
 export async function POST(req: Request) {
   const body = await req.json();

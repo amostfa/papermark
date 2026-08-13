@@ -21,13 +21,6 @@ import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../../../../auth/[...nextauth]";
 
-// Same payload-size considerations as the PUT route — bump the timeout so
-// large datarooms saving full permission state at create time don't trip
-// the platform default.
-export const config = {
-  maxDuration: 300,
-};
-
 // Mirrors the schema used by the PUT handler in
 // `[permissionGroupId].ts` so the same validation rules apply to creates.
 const itemPermissionSchema = z.object({

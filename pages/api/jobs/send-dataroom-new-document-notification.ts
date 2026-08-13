@@ -6,10 +6,6 @@ import prisma from "@/lib/prisma";
 import { log } from "@/lib/utils";
 import { generateUnsubscribeUrl } from "@/lib/utils/unsubscribe";
 
-export const config = {
-  maxDuration: 120,
-};
-
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
