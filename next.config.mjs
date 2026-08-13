@@ -349,6 +349,12 @@ const nextConfig = {
     serverComponentsExternalPackages: ["oidc-provider", "koa", "jsonpath"],
   },
   webpack: (config, { isServer }) => {
+    // Useful for constrained self-host build runners where webpack's
+    // production cache can be larger than the final application output.
+    if (process.env.NEXT_DISABLE_WEBPACK_CACHE === "1") {
+      config.cache = false;
+    }
+
     // oidc-provider depends on Koa which uses dynamic requires webpack can't
     // statically analyze. Mark it external on the server so Node's require()
     // resolves it from node_modules at runtime.
