@@ -5,6 +5,10 @@ import { PLAN_NAME_MAP } from "@/ee/stripe/constants";
 import { SubscriptionDiscount } from "@/ee/stripe/functions/get-subscription-item";
 import useSWR from "swr";
 
+import {
+  SELF_HOSTED_PLAN,
+  isSelfHostedDeployment,
+} from "@/lib/self-host/entitlements";
 import { fetcher } from "@/lib/utils";
 
 export type BasePlan =
@@ -66,13 +70,14 @@ export function usePlan({
 }: { withDiscount?: boolean } = {}) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
+  const isSelfHosted = isSelfHostedDeployment();
 
   const {
     data: plan,
     error,
     mutate,
   } = useSWR<PlanResponse>(
-    teamId
+    teamId && !isSelfHosted
       ? `/api/teams/${teamId}/billing/plan${withDiscount ? "?withDiscount=true" : ""}`
       : null,
     fetcher,
@@ -80,11 +85,14 @@ export function usePlan({
 
   // Parse the plan using the parsing function
   const parsedPlan = useMemo(() => {
+    if (isSelfHosted) {
+      return parsePlan(SELF_HOSTED_PLAN);
+    }
     if (!plan || !plan.plan) {
       return { plan: null, trial: null, old: false };
     }
     return parsePlan(plan.plan);
-  }, [plan]);
+  }, [isSelfHosted, plan]);
 
   return {
     plan: parsedPlan.plan ?? "free",
@@ -93,7 +101,7 @@ export function usePlan({
     trial: parsedPlan.trial,
     isTrial: !!parsedPlan.trial,
     isOldAccount: parsedPlan.old,
-    isCustomer: plan?.isCustomer,
+    isCustomer: isSelfHosted ? false : plan?.isCustomer,
     isAnnualPlan: plan?.subscriptionCycle === "yearly",
     startsAt: plan?.startsAt,
     endsAt: plan?.endsAt,
@@ -110,11 +118,20 @@ export function usePlan({
     isPro: parsedPlan.plan === "pro",
     isBusiness: parsedPlan.plan === "business",
     isDatarooms:
-      parsedPlan.plan === "datarooms" || parsedPlan.plan === "datarooms-plus" || parsedPlan.plan === "datarooms-premium" || parsedPlan.plan === "datarooms-unlimited",
-    isDataroomsPlus: parsedPlan.plan === "datarooms-plus" || parsedPlan.plan === "datarooms-premium" || parsedPlan.plan === "datarooms-unlimited",
-    isDataroomsPremium: parsedPlan.plan === "datarooms-premium" || parsedPlan.plan === "datarooms-unlimited",
+      parsedPlan.plan === "datarooms" ||
+      parsedPlan.plan === "datarooms-plus" ||
+      parsedPlan.plan === "datarooms-premium" ||
+      parsedPlan.plan === "datarooms-unlimited",
+    isDataroomsPlus:
+      parsedPlan.plan === "datarooms-plus" ||
+      parsedPlan.plan === "datarooms-premium" ||
+      parsedPlan.plan === "datarooms-unlimited",
+    isDataroomsPremium:
+      parsedPlan.plan === "datarooms-premium" ||
+      parsedPlan.plan === "datarooms-unlimited",
     isDataroomsUnlimited: parsedPlan.plan === "datarooms-unlimited",
-    loading: !plan && !error && !!teamId, // Only show loading if we have a teamId but no data
+    isSelfHosted,
+    loading: !isSelfHosted && !plan && !error && !!teamId,
     error,
     mutate,
   };

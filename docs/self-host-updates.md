@@ -4,6 +4,15 @@ The self-host layer is intentionally fail-closed. Upstream application changes
 merge normally, while the contents of `ee/` are constrained by
 `scripts/self-host/manifest.json`.
 
+Set `NEXT_PUBLIC_SELF_HOSTED=true` for this fork. Self-host mode leaves each
+team's stored billing plan untouched, but presents `datarooms-unlimited` as the
+effective runtime entitlement. That removes SaaS upgrade modals, Stripe
+checkout, and core dataroom quotas without restoring any Enterprise Edition
+implementation. A Prisma result extension applies the effective plan to both
+direct and nested team reads, while the client plan hook skips the absent SaaS
+billing endpoint. The entitlement audit and disposable-database smoke test make
+an upstream regression fail CI instead of silently restoring the payment wall.
+
 Passkey login is optional. Configure both `HANKO_API_KEY` and
 `NEXT_PUBLIC_HANKO_TENANT_ID` to enable it; when either is absent, the provider
 and login control remain disabled without blocking the build.

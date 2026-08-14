@@ -35,6 +35,7 @@ env:
   NEXT_PUBLIC_APP_BASE_HOST: docs.bonumworks.com
   NEXT_PUBLIC_BASE_URL: http://localhost:3017
   NEXT_PUBLIC_MARKETING_URL: http://localhost:3017
+  NEXT_PUBLIC_SELF_HOSTED: "true"
   NEXT_PUBLIC_UPLOAD_TRANSPORT: vercel
   NEXT_PUBLIC_WEBHOOK_BASE_HOST: webhooks.localhost
   NEXTAUTH_SECRET: self-host-ci-nextauth-secret
@@ -97,6 +98,9 @@ jobs:
 
       - name: Test database-backed email authentication
         run: npm run selfhost:auth-db-smoke
+
+      - name: Test self-host dataroom entitlements
+        run: npm run selfhost:entitlements-db-smoke
 
       - name: Build production application
         run: npm run build

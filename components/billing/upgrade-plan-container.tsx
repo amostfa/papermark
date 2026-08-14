@@ -35,6 +35,7 @@ export default function UpgradePlanContainer() {
     isDataroomsPlus,
     isDataroomsPremium,
     isDataroomsUnlimited,
+    isSelfHosted,
     isPaused,
     isCancelled,
     startsAt,
@@ -43,6 +44,20 @@ export default function UpgradePlanContainer() {
     discount,
   } = usePlan({ withDiscount: true });
   const analytics = useAnalytics();
+
+  if (isSelfHosted) {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+          Self-hosted deployment
+        </h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          SaaS billing is disabled. Core features and datarooms are available
+          without a Stripe subscription.
+        </p>
+      </div>
+    );
+  }
 
   const goToUpgrade = () => router.push("/settings/billing/upgrade");
   const goToInvoices = () => router.push("/settings/billing/invoices");
@@ -220,7 +235,10 @@ export default function UpgradePlanContainer() {
     if (isCancelled) {
       return (
         <>
-          <Button onClick={handleReactivateSubscription} loading={unpauseLoading}>
+          <Button
+            onClick={handleReactivateSubscription}
+            loading={unpauseLoading}
+          >
             Reactivate subscription
           </Button>
           <Button variant="outline" onClick={goToInvoices}>
@@ -357,9 +375,7 @@ export default function UpgradePlanContainer() {
               </div>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {ButtonList()}
-          </div>
+          <div className="flex shrink-0 items-center gap-2">{ButtonList()}</div>
         </div>
       </div>
 
