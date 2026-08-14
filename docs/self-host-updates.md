@@ -21,6 +21,13 @@ mailbox, and a dedicated sending subdomain avoids interfering with an existing
 mail provider. Authentication waits for Resend to accept the message, so a
 delivery configuration failure is reported instead of showing a false success.
 
+Set `NEXTAUTH_URL` to the public application origin, including `https://` (for
+example `https://docs.example.com`). Leave `NEXTAUTH_COOKIE_DOMAIN` empty for
+the safer host-only session cookie. Set it to a parent domain such as
+`.example.com` only if the same login session must be shared by multiple
+subdomains. The verification page must use a full document navigation for the
+single-use NextAuth callback; the self-host check guards both requirements.
+
 The self-host checks preserve this PostgreSQL-only login path during upstream
 updates. CI also exercises concurrent code issuance, one-time consumption,
 expiration, failed-delivery cleanup, and rate limiting against its disposable
