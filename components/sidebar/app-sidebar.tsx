@@ -65,7 +65,7 @@ export function AppSidebarContent() {
 
   // Check Slack integration status
   const { integration: slackIntegration } = useSlackIntegration({
-    enabled: !!currentTeam?.id,
+    enabled: !!currentTeam?.id && !isSelfHosted,
   });
 
   // Check feature flags
@@ -292,42 +292,44 @@ export function AppSidebarContent() {
         <SidebarMenu className="group-data-[collapsible=icon]:hidden">
           <SidebarMenuItem>
             <div>
-              {!slackIntegration && showSlackBanner ? (
+              {!isSelfHosted && !slackIntegration && showSlackBanner ? (
                 <SlackBanner setShowSlackBanner={setShowSlackBanner} />
               ) : null}
               {isFree && !isTrial && showProBanner ? (
                 <ProBanner setShowProBanner={setShowProBanner} />
               ) : null}
 
-              <div className="mb-2">
-                {linksLimit ? (
-                  <UsageProgress
-                    title="Links"
-                    unit="links"
-                    usage={limits?.usage?.links}
-                    usageLimit={linksLimit}
-                  />
-                ) : null}
-                {documentsLimit ? (
-                  <UsageProgress
-                    title="Documents"
-                    unit="documents"
-                    usage={limits?.usage?.documents}
-                    usageLimit={documentsLimit}
-                  />
-                ) : null}
-                {linksLimit || documentsLimit ? (
-                  <p className="mt-2 px-2 text-xs text-muted-foreground">
-                    <Link
-                      href="/settings/billing/upgrade"
-                      className="font-medium text-foreground underline-offset-2 hover:underline"
-                    >
-                      Change plan
-                    </Link>{" "}
-                    to increase limits
-                  </p>
-                ) : null}
-              </div>
+              {!isSelfHosted ? (
+                <div className="mb-2">
+                  {linksLimit ? (
+                    <UsageProgress
+                      title="Links"
+                      unit="links"
+                      usage={limits?.usage?.links}
+                      usageLimit={linksLimit}
+                    />
+                  ) : null}
+                  {documentsLimit ? (
+                    <UsageProgress
+                      title="Documents"
+                      unit="documents"
+                      usage={limits?.usage?.documents}
+                      usageLimit={documentsLimit}
+                    />
+                  ) : null}
+                  {linksLimit || documentsLimit ? (
+                    <p className="mt-2 px-2 text-xs text-muted-foreground">
+                      <Link
+                        href="/settings/billing/upgrade"
+                        className="font-medium text-foreground underline-offset-2 hover:underline"
+                      >
+                        Change plan
+                      </Link>{" "}
+                      to increase limits
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
