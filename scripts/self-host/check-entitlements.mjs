@@ -39,7 +39,13 @@ const checks = [
   },
   {
     file: "components/sidebar/app-sidebar.tsx",
-    required: ["...(isSelfHosted", 'title: "Billing"'],
+    required: [
+      "...(isSelfHosted",
+      'title: "Billing"',
+      "enabled: !!currentTeam?.id && !isSelfHosted",
+      "!isSelfHosted && !slackIntegration && showSlackBanner",
+      "{!isSelfHosted ? (",
+    ],
   },
   {
     file: "components/billing/upgrade-plan-container.tsx",
