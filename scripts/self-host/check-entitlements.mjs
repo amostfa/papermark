@@ -48,6 +48,31 @@ const checks = [
     ],
   },
   {
+    file: "components/layouts/mobile-more-menu.tsx",
+    required: [
+      "enabled: !!currentTeam?.id && !isSelfHosted",
+      "!isSelfHosted && !slackIntegration",
+      "!isSelfHosted && (linksLimit || documentsLimit)",
+      '...(isSelfHosted ? [] : [{ label: "Slack", href: "/settings/slack" }])',
+      '...(isSelfHosted ? [] : [{ label: "Billing", href: "/settings/billing" }])',
+    ],
+  },
+  {
+    file: "lib/swr/use-slack-integration.ts",
+    required: ["enabled && !isSelfHosted && teamId"],
+  },
+  {
+    file: "lib/swr/use-subscription-currency.ts",
+    required: [
+      "teamId && !isSelfHosted",
+      "loading: !isSelfHosted && isLoading",
+    ],
+  },
+  {
+    file: "lib/swr/use-geo-currency.ts",
+    required: ['isSelfHosted ? null : "/api/geo/currency"'],
+  },
+  {
     file: "components/billing/upgrade-plan-container.tsx",
     required: [
       "if (isSelfHosted)",
