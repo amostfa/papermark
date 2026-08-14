@@ -50,8 +50,14 @@ export function AppSidebarContent() {
   const [showSlackBanner, setShowSlackBanner] = useState<boolean | null>(null);
   const { currentTeam, teams, setCurrentTeam, isLoading }: TeamContextType =
     useTeam() || initialState;
-  const { isBusiness, isDatarooms, isDataroomsPlus, isFree, isTrial } =
-    usePlan();
+  const {
+    isBusiness,
+    isDatarooms,
+    isDataroomsPlus,
+    isFree,
+    isSelfHosted,
+    isTrial,
+  } = usePlan();
 
   const { limits } = useLimits();
   const linksLimit = limits?.links;
@@ -215,11 +221,15 @@ export function AppSidebarContent() {
                 },
               ]
             : []),
-          {
-            title: "Billing",
-            url: "/settings/billing",
-            current: router.pathname.includes("settings/billing"),
-          },
+          ...(isSelfHosted
+            ? []
+            : [
+                {
+                  title: "Billing",
+                  url: "/settings/billing",
+                  current: router.pathname.includes("settings/billing"),
+                },
+              ]),
         ],
       },
     ],
