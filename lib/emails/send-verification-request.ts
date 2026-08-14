@@ -55,7 +55,7 @@ export const sendVerificationRequestEmail = async (params: {
     await sendEmail({
       to: normalizedEmail,
       system: true,
-      subject: "Login for Papermark",
+      subject: "Your BONUM login code",
       react: emailTemplate,
       test: process.env.NODE_ENV === "development",
     });

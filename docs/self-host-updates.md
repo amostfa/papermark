@@ -16,7 +16,7 @@ Email-code login uses the existing PostgreSQL database for its short-lived
 codes and abuse rate limits; it does not require Upstash Redis. Apply every
 Prisma migration before starting the application. Configure `RESEND_API_KEY`
 and `RESEND_FROM_EMAIL` with a sender on a domain verified in Resend, for
-example `Papermark <noreply@send.example.com>`. The sender does not need to be a
+example `BONUM <noreply@send.example.com>`. The sender does not need to be a
 mailbox, and a dedicated sending subdomain avoids interfering with an existing
 mail provider. Authentication waits for Resend to accept the message, so a
 delivery configuration failure is reported instead of showing a false success.
@@ -25,6 +25,14 @@ The self-host checks preserve this PostgreSQL-only login path during upstream
 updates. CI also exercises concurrent code issuance, one-time consumption,
 expiration, failed-delivery cleanup, and rate limiting against its disposable
 database.
+
+The self-hosted authentication journey is branded for BONUM in
+`components/auth/bonum-auth-shell.tsx`, the login and code-entry pages, their
+route metadata, and the verification email. The authentication configuration
+check asserts those markers, so an upstream update that removes the BONUM
+surface fails verification instead of silently restoring Papermark branding.
+Keep authentication behavior in the upstream page clients and presentation in
+the shared BONUM shell when resolving future conflicts.
 
 The year-in-review Open Graph route intentionally embeds a single font. Two
 embedded TTF files push that Edge Function over Vercel's 1 MB plan limit, so

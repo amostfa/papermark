@@ -36,6 +36,35 @@ const checks = [
     file: ".github/workflows/self-host-ci.yml",
     required: ["npm run selfhost:auth-db-smoke"],
   },
+  {
+    file: "components/auth/bonum-auth-shell.tsx",
+    required: [
+      "A venture studio for GOOD",
+      "Good is not a side effect.",
+      "Fight poverty",
+      "Advance justice",
+    ],
+  },
+  {
+    file: "app/(auth)/login/page-client.tsx",
+    required: ["BonumAuthShell", "BONUM workspace", "work that matters."],
+    forbidden: ["Welcome to Papermark", "LogoCloud"],
+  },
+  {
+    file: "app/(auth)/auth/email/[[...params]]/page-client.tsx",
+    required: ["BonumAuthShell", "Verify and continue"],
+    forbidden: ["Papermark Logo", "LogoCloud"],
+  },
+  {
+    file: "components/emails/verification-link.tsx",
+    required: ["Your BONUM login code", "A venture studio for GOOD"],
+    forbidden: ["Papermark"],
+  },
+  {
+    file: "scripts/self-host/smoke-server.mjs",
+    required: ["<title>Sign in | BONUM"],
+    forbidden: ["<title>Login | Papermark"],
+  },
 ];
 
 try {
@@ -63,7 +92,7 @@ try {
     process.exitCode = 1;
   } else {
     console.log(
-      "Self-host email authentication uses PostgreSQL and a configured sender.",
+      "Self-host authentication uses PostgreSQL, a configured sender, and the BONUM auth surface.",
     );
   }
 } catch (error) {

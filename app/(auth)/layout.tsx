@@ -1,19 +1,27 @@
-"use client";
+import { Bricolage_Grotesque, Instrument_Serif } from "next/font/google";
 
-import { SessionProvider } from "next-auth/react";
-import { Toaster } from "sonner";
+import { AuthProviders } from "./providers";
 
-import { ThemeProvider } from "@/components/theme-provider";
+const bonumSans = Bricolage_Grotesque({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-bonum-sans",
+});
+
+const bonumDisplay = Instrument_Serif({
+  subsets: ["latin"],
+  display: "swap",
+  style: ["normal", "italic"],
+  variable: "--font-bonum-display",
+  weight: "400",
+});
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-        <main>
-          <Toaster closeButton richColors theme="system" />
-          <div>{children}</div>
-        </main>
-      </ThemeProvider>
-    </SessionProvider>
+    <AuthProviders>
+      <div className={`${bonumSans.variable} ${bonumDisplay.variable}`}>
+        {children}
+      </div>
+    </AuthProviders>
   );
 }
