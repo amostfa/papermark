@@ -104,12 +104,10 @@ try {
   await waitForServer(server);
 
   const login = await request({ pathname: "/login" });
-  if (
-    login.status !== 200 ||
-    !login.body.includes("<title>Login | Papermark")
-  ) {
+  const hasBonumTitle = login.body.includes("<title>Sign in | BONUM");
+  if (login.status !== 200 || !hasBonumTitle) {
     throw new Error(
-      `login smoke check failed: status=${login.status}, title missing=${!login.body.includes("<title>Login | Papermark")}`,
+      `login smoke check failed: status=${login.status}, BONUM title missing=${!hasBonumTitle}`,
     );
   }
 
