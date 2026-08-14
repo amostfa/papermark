@@ -12,7 +12,20 @@ async function source(relativePath) {
 const checks = [
   {
     file: ".env.example",
-    required: ["RESEND_API_KEY=", "RESEND_FROM_EMAIL="],
+    required: [
+      "NEXTAUTH_COOKIE_DOMAIN=",
+      "RESEND_API_KEY=",
+      "RESEND_FROM_EMAIL=",
+    ],
+  },
+  {
+    file: "lib/auth/auth-options.ts",
+    required: [
+      "NEXTAUTH_COOKIE_DOMAIN",
+      "AUTH_COOKIE_DOMAIN",
+      "USE_SECURE_AUTH_COOKIE",
+    ],
+    forbidden: ['domain: VERCEL_DEPLOYMENT ? ".papermark.com" : undefined'],
   },
   {
     file: "lib/emails/send-verification-request.ts",
@@ -52,8 +65,12 @@ const checks = [
   },
   {
     file: "app/(auth)/auth/email/[[...params]]/page-client.tsx",
-    required: ["BonumAuthShell", "Verify and continue"],
-    forbidden: ["Papermark Logo", "LogoCloud"],
+    required: [
+      "BonumAuthShell",
+      "Verify and continue",
+      "window.location.assign",
+    ],
+    forbidden: ["Papermark Logo", "LogoCloud", "router.push(data.callbackUrl)"],
   },
   {
     file: "components/emails/verification-link.tsx",

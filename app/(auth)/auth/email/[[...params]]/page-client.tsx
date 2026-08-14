@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { useEffect, useRef, useState } from "react";
 
@@ -16,7 +15,6 @@ const inputClassName =
   "h-12 rounded-none border border-[#14251d]/20 bg-[#fffdf7] px-4 text-[0.95rem] text-[#14251d] shadow-none transition-colors placeholder:text-[#14251d]/35 focus:border-[#42603d] focus:ring-2 focus:ring-[#b9e86d]/60 focus:ring-offset-0 disabled:bg-[#e9e5da] dark:border-[#14251d]/20 dark:bg-[#fffdf7]";
 
 export default function EmailVerificationClient() {
-  const router = useRouter();
   const codeInputRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState("");
   const [emailLocked, setEmailLocked] = useState(false);
@@ -85,7 +83,18 @@ export default function EmailVerificationClient() {
       }
 
       if (data.callbackUrl) {
-        router.push(data.callbackUrl);
+        const callbackUrl = new URL(data.callbackUrl, window.location.origin);
+
+        if (callbackUrl.origin !== window.location.origin) {
+          setIsLoading(false);
+          setError("Unable to complete sign-in. Please request a new code.");
+          return;
+        }
+
+        // The NextAuth email callback is single-use. A client-router navigation
+        // can request it first as RSC data and then again as a document, which
+        // consumes the token before the session cookie is established.
+        window.location.assign(callbackUrl.href);
         return;
       }
 

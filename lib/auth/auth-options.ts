@@ -16,6 +16,11 @@ import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
+const AUTH_COOKIE_DOMAIN = process.env.NEXTAUTH_COOKIE_DOMAIN?.trim();
+const USE_SECURE_AUTH_COOKIE =
+  VERCEL_DEPLOYMENT ||
+  process.env.NEXTAUTH_URL?.trim().toLowerCase().startsWith("https://") ===
+    true;
 
 function getMainDomainUrl(): string {
   if (process.env.NODE_ENV === "development") {
@@ -187,13 +192,16 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   cookies: {
     sessionToken: {
-      name: `${VERCEL_DEPLOYMENT ? "__Secure-" : ""}next-auth.session-token`,
+      name: `${USE_SECURE_AUTH_COOKIE ? "__Secure-" : ""}next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        domain: VERCEL_DEPLOYMENT ? ".papermark.com" : undefined,
-        secure: VERCEL_DEPLOYMENT,
+        // Host-only by default so custom self-host domains can accept the
+        // session cookie. Configure a parent domain explicitly only when the
+        // session genuinely needs to be shared across subdomains.
+        ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+        secure: USE_SECURE_AUTH_COOKIE,
       },
     },
   },
