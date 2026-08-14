@@ -2,6 +2,7 @@ import { useTeam } from "@/context/team-context";
 import type { Currency } from "@/ee/stripe/currency";
 import useSWR from "swr";
 
+import { isSelfHostedDeployment } from "@/lib/self-host/entitlements";
 import { fetcher } from "@/lib/utils";
 
 // Resolves the currency the team is already being billed in. Returns `null`
@@ -14,9 +15,10 @@ export function useSubscriptionCurrency(): {
 } {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
+  const isSelfHosted = isSelfHostedDeployment();
 
   const { data, isLoading } = useSWR<{ currency: Currency | null }>(
-    teamId ? `/api/teams/${teamId}/billing/currency` : null,
+    teamId && !isSelfHosted ? `/api/teams/${teamId}/billing/currency` : null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -25,5 +27,8 @@ export function useSubscriptionCurrency(): {
     },
   );
 
-  return { currency: data?.currency, loading: isLoading };
+  return {
+    currency: isSelfHosted ? null : data?.currency,
+    loading: !isSelfHosted && isLoading,
+  };
 }

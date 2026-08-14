@@ -12,6 +12,8 @@ implementation. A Prisma result extension applies the effective plan to both
 direct and nested team reads, while the client plan hook skips the absent SaaS
 billing endpoint. The entitlement audit and disposable-database smoke test make
 an upstream regression fail CI instead of silently restoring the payment wall.
+Shared Slack and billing-currency hooks also stay dormant in self-host mode, and
+the desktop and mobile navigation omit their SaaS-only controls.
 
 Passkey login is optional. Configure both `HANKO_API_KEY` and
 `NEXT_PUBLIC_HANKO_TENANT_ID` to enable it; when either is absent, the provider

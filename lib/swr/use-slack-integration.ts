@@ -3,12 +3,16 @@ import useSWR from "swr";
 import useSWRImmutable from "swr/immutable";
 
 import { SlackIntegration } from "@/lib/integrations/slack/types";
+import { isSelfHostedDeployment } from "@/lib/self-host/entitlements";
 import { fetcher } from "@/lib/utils";
 
 export function useSlackIntegration({ enabled = true }: { enabled?: boolean }) {
   const { currentTeamId: teamId } = useTeam();
+  const isSelfHosted = isSelfHostedDeployment();
   const { data, error, isLoading, mutate } = useSWRImmutable<SlackIntegration>(
-    enabled && teamId ? `/api/teams/${teamId}/integrations/slack` : null,
+    enabled && !isSelfHosted && teamId
+      ? `/api/teams/${teamId}/integrations/slack`
+      : null,
     fetcher,
     {
       revalidateOnFocus: false,

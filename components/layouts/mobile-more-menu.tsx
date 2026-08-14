@@ -35,13 +35,13 @@ interface MobileMoreMenuProps {
 export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
   const router = useRouter();
   const { currentTeam, teams, setCurrentTeam } = useTeam() || {};
-  const { isFree, isTrial } = usePlan();
+  const { isFree, isSelfHosted, isTrial } = usePlan();
   const { limits } = useLimits();
   const { isAdmin } = useIsAdmin();
   // Scoped members can't reach team-wide areas (visitors, branding, settings).
   const { isDataroomMember } = useSelfMembership();
   const { integration: slackIntegration } = useSlackIntegration({
-    enabled: !!currentTeam?.id,
+    enabled: !!currentTeam?.id && !isSelfHosted,
   });
   const [settingsExpanded, setSettingsExpanded] = useState(() =>
     router.pathname.includes("settings"),
@@ -76,9 +76,9 @@ export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
     { label: "Domains", href: "/settings/domains" },
     { label: "Notifications", href: "/settings/notifications" },
     { label: "Webhooks", href: "/settings/webhooks" },
-    { label: "Slack", href: "/settings/slack" },
+    ...(isSelfHosted ? [] : [{ label: "Slack", href: "/settings/slack" }]),
     ...(isAdmin ? [{ label: "Security", href: "/settings/security" }] : []),
-    { label: "Billing", href: "/settings/billing" },
+    ...(isSelfHosted ? [] : [{ label: "Billing", href: "/settings/billing" }]),
   ];
 
   return (
@@ -190,7 +190,7 @@ export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
                 )}
               </div>
 
-              {!slackIntegration && (
+              {!isSelfHosted && !slackIntegration && (
                 <Link
                   href="/settings/slack"
                   onClick={onClose}
@@ -204,7 +204,7 @@ export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
           )}
         </div>
 
-        {(linksLimit || documentsLimit) && (
+        {!isSelfHosted && (linksLimit || documentsLimit) && (
           <div className="mt-6 space-y-3 rounded-lg border border-border p-4">
             <p className="text-xs font-medium text-muted-foreground">Usage</p>
             {linksLimit ? (
@@ -250,7 +250,7 @@ export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
           </div>
         )}
 
-        {isTrial && (
+        {!isSelfHosted && isTrial && (
           <div className="mt-4">
             <Link
               href="/settings/billing/upgrade?view=business-datarooms"
@@ -261,7 +261,7 @@ export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
             </Link>
           </div>
         )}
-        {isFree && !isTrial && (
+        {!isSelfHosted && isFree && !isTrial && (
           <div className="mt-4">
             <Link
               href="/settings/billing"
