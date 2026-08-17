@@ -1,18 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
-import { getLimits } from "@/ee/limits/server";
 import { MultiRegionS3Store } from "@/ee/features/storage/s3-store";
+import { getLimits } from "@/ee/limits/server";
 import { CopyObjectCommand } from "@aws-sdk/client-s3";
 import { Server } from "@tus/server";
 import { getServerSession } from "next-auth/next";
 import path from "node:path";
 
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
-import { RedisLocker } from "@/lib/files/tus-redis-locker";
+import { createTusLocker } from "@/lib/files/tus-locker";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
-import { lockerRedisClient } from "@/lib/redis";
 import { CustomUser } from "@/lib/types";
 import { buildContentDisposition, log, safeSlugify } from "@/lib/utils";
 import {
@@ -28,9 +27,7 @@ export const config = {
   },
 };
 
-const locker = new RedisLocker({
-  redisClient: lockerRedisClient,
-});
+const locker = createTusLocker();
 
 const FREE_PLAN = "free";
 const FREE_TRIAL_PLAN = "free+drtrial";
@@ -211,7 +208,9 @@ const tusServer = new Server({
 
     const isFree = team.plan === FREE_PLAN || team.plan === FREE_TRIAL_PLAN;
     const isTrial = team.plan.includes("drtrial");
-    const teamFileSizeLimitConfig: Parameters<typeof getFileSizeLimits>[0]["limits"] =
+    const teamFileSizeLimitConfig: Parameters<
+      typeof getFileSizeLimits
+    >[0]["limits"] =
       "fileSizeLimits" in limits &&
       typeof limits.fileSizeLimits === "object" &&
       limits.fileSizeLimits !== null

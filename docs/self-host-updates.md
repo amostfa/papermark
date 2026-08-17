@@ -23,6 +23,18 @@ Slack notifications are also optional. Their client is inert until a Slack
 operation is requested; Slack-specific routes validate their variables when
 used instead of blocking unrelated application routes during startup.
 
+Document uploads require private S3 or an S3-compatible object store. Set
+`NEXT_PUBLIC_UPLOAD_TRANSPORT=s3` and configure the `NEXT_PRIVATE_UPLOAD_*`
+bucket, region, endpoint, and credential variables before building the client.
+Leave the distribution host/domain and signing keys blank to use direct,
+presigned S3-compatible URLs. Set them only for a configured CloudFront
+distribution. Vercel Blob remains usable for public assets but is not a
+document-storage transport. Generate and configure `INTERNAL_API_KEY` for the
+server-to-server requests that issue signed document URLs. The TUS upload routes
+use an in-memory lock when the two `UPSTASH_REDIS_REST_LOCKER_*` variables are
+blank; configure both for a distributed lock when multiple server instances may
+handle the same upload.
+
 Email-code login uses the existing PostgreSQL database for its short-lived
 codes and abuse rate limits; it does not require Upstash Redis. Apply every
 Prisma migration before starting the application. Configure `RESEND_API_KEY`

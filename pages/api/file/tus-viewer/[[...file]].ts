@@ -8,12 +8,10 @@ import path from "node:path";
 
 import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
-import { buildContentDisposition, safeSlugify } from "@/lib/utils";
-import { RedisLocker } from "@/lib/files/tus-redis-locker";
+import { createTusLocker } from "@/lib/files/tus-locker";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
-import { lockerRedisClient } from "@/lib/redis";
-import { log } from "@/lib/utils";
+import { buildContentDisposition, log, safeSlugify } from "@/lib/utils";
 
 export const config = {
   api: {
@@ -21,9 +19,7 @@ export const config = {
   },
 };
 
-const locker = new RedisLocker({
-  redisClient: lockerRedisClient,
-});
+const locker = createTusLocker();
 
 /**
  * Validates a viewer upload and resolves the team the file belongs to.
