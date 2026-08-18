@@ -4,7 +4,7 @@ import { pythonExtension } from "@trigger.dev/python/extension";
 import { defineConfig, timeout } from "@trigger.dev/sdk";
 
 export default defineConfig({
-  project: "proj_plmsfqvqunboixacjjus",
+  project: "proj_ixotlvdfwrzscthtneiw",
   dirs: ["./lib/trigger", "./ee/**/lib/trigger"],
   maxDuration: timeout.None, // no max duration
   retries: {
