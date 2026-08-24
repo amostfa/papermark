@@ -13,6 +13,7 @@ import {
 import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { isBuiltInLinkDomain } from "@/lib/self-host/link-domain";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import {
   decryptEncrpytedPassword,
@@ -184,8 +185,9 @@ export default async function handler(
 
       let { domain, slug, ...linkData } = linkDomainData;
 
-      // set domain and slug to null if the domain is papermark.com
-      if (domain && domain === "papermark.com") {
+      // Built-in links always use /view/:id. This also cleans up stale rows
+      // where the self-hosted application hostname was saved as custom.
+      if (domain && isBuiltInLinkDomain(domain)) {
         domain = null;
         slug = null;
       }
@@ -271,8 +273,7 @@ export default async function handler(
 
         if (validGroups.length !== linkData.visitorGroupIds.length) {
           return res.status(400).json({
-            error:
-              "One or more visitor group IDs do not belong to this team.",
+            error: "One or more visitor group IDs do not belong to this team.",
           });
         }
       }

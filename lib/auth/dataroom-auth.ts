@@ -7,12 +7,16 @@ import { parse } from "cookie";
 import crypto from "crypto";
 import { z } from "zod";
 
-import { redis } from "@/lib/redis";
+import {
+  createSignedSessionToken,
+  parseSignedSessionToken,
+} from "@/lib/auth/signed-session";
 
 import { LOCALHOST_IP } from "../utils/geo";
 import { getIpAddress } from "../utils/ip";
 
 const COOKIE_EXPIRATION_TIME = 23 * 60 * 60 * 1000; // 23 hours
+const DATAROOM_SESSION_PURPOSE = "papermark-dataroom-session-v1";
 
 /**
  * Normalize IP addresses so that IPv6 loopback (::1),
@@ -77,9 +81,7 @@ function getFingerprintFromPagesRequest(req: NextApiRequest): string {
     const v = req.headers[name];
     return (Array.isArray(v) ? v[0] : v) ?? null;
   };
-  return generateSessionFingerprint(
-    collectFingerprintHeaders({ get: header }),
-  );
+  return generateSessionFingerprint(collectFingerprintHeaders({ get: header }));
 }
 
 // Define the Zod schema for session data
@@ -106,7 +108,6 @@ async function createDataroomSession(
   viewerId?: string,
   fingerprint?: string,
 ): Promise<{ token: string; expiresAt: number }> {
-  const sessionToken = crypto.randomBytes(32).toString("hex");
   const expiresAt = Date.now() + COOKIE_EXPIRATION_TIME;
 
   const sessionData: DataroomSession = {
@@ -122,16 +123,20 @@ async function createDataroomSession(
 
   DataroomSessionSchema.parse(sessionData);
 
-  await redis.set(
-    `dataroom_session:${sessionToken}`,
-    JSON.stringify(sessionData),
-    { pxat: expiresAt },
-  );
-
   return {
-    token: sessionToken,
+    token: createSignedSessionToken(sessionData, DATAROOM_SESSION_PURPOSE),
     expiresAt,
   };
+}
+
+function parseDataroomSessionToken(
+  sessionToken: string,
+): DataroomSession | null {
+  const parsed = DataroomSessionSchema.safeParse(
+    parseSignedSessionToken(sessionToken, DATAROOM_SESSION_PURPOSE),
+  );
+
+  return parsed.success ? parsed.data : null;
 }
 
 async function verifyDataroomSession(
@@ -144,14 +149,11 @@ async function verifyDataroomSession(
   const sessionToken = cookies().get(`pm_drs_${linkId}`)?.value;
   if (!sessionToken) return null;
 
-  const session = await redis.get(`dataroom_session:${sessionToken}`);
-  if (!session) return null;
-
   try {
-    const sessionData = DataroomSessionSchema.parse(session);
+    const sessionData = parseDataroomSessionToken(sessionToken);
+    if (!sessionData) return null;
 
     if (sessionData.expiresAt < Date.now()) {
-      await redis.del(`dataroom_session:${sessionToken}`);
       return null;
     }
 
@@ -161,13 +163,11 @@ async function verifyDataroomSession(
     if (sessionData.fingerprint) {
       const currentFingerprint = getFingerprintFromNextRequest(request);
       if (currentFingerprint !== sessionData.fingerprint) {
-        await redis.del(`dataroom_session:${sessionToken}`);
         return null;
       }
     } else {
       const ipAddressValue = normalizeIp(ipAddress(request) ?? LOCALHOST_IP);
       if (ipAddressValue !== sessionData.ipAddress) {
-        await redis.del(`dataroom_session:${sessionToken}`);
         return null;
       }
     }
@@ -176,13 +176,11 @@ async function verifyDataroomSession(
       sessionData.linkId !== linkId ||
       sessionData.dataroomId !== dataroomId
     ) {
-      await redis.del(`dataroom_session:${sessionToken}`);
       return null;
     }
 
     return sessionData;
   } catch (error) {
-    await redis.del(`dataroom_session:${sessionToken}`);
     return null;
   }
 }
@@ -217,21 +215,17 @@ export async function getDataroomSessionByLinkIdInPagesRouter(
     return null;
   }
 
-  const session = await redis.get(`dataroom_session:${sessionToken}`);
-  if (!session) return null;
-
   try {
-    const sessionData = DataroomSessionSchema.parse(session);
+    const sessionData = parseDataroomSessionToken(sessionToken);
+    if (!sessionData) return null;
 
     if (sessionData.expiresAt < Date.now()) {
-      await redis.del(`dataroom_session:${sessionToken}`);
       return null;
     }
 
     if (sessionData.fingerprint) {
       const currentFingerprint = getFingerprintFromPagesRequest(req);
       if (currentFingerprint !== sessionData.fingerprint) {
-        await redis.del(`dataroom_session:${sessionToken}`);
         return null;
       }
     } else {
@@ -239,19 +233,16 @@ export async function getDataroomSessionByLinkIdInPagesRouter(
         getIpAddress(req.headers) ?? LOCALHOST_IP,
       );
       if (ipAddressValue !== sessionData.ipAddress) {
-        await redis.del(`dataroom_session:${sessionToken}`);
         return null;
       }
     }
 
     if (sessionData.linkId !== linkId) {
-      await redis.del(`dataroom_session:${sessionToken}`);
       return null;
     }
 
     return sessionData;
   } catch (error) {
-    await redis.del(`dataroom_session:${sessionToken}`);
     return null;
   }
 }
@@ -263,32 +254,24 @@ export async function getDataroomSessionByLinkIdInPagesRouter(
 export async function updateDataroomSessionVerified(
   sessionToken: string,
   verified: boolean,
-): Promise<boolean> {
-  if (!sessionToken) return false;
-
-  const raw = await redis.get(`dataroom_session:${sessionToken}`);
-  if (!raw) return false;
+): Promise<{ token: string; expiresAt: number } | null> {
+  if (!sessionToken) return null;
 
   try {
-    const sessionData = DataroomSessionSchema.parse(
-      typeof raw === "string" ? JSON.parse(raw) : raw,
-    );
+    const sessionData = parseDataroomSessionToken(sessionToken);
+    if (!sessionData) return null;
+
     if (sessionData.expiresAt < Date.now()) {
-      await redis.del(`dataroom_session:${sessionToken}`);
-      return false;
+      return null;
     }
 
     const updated: DataroomSession = { ...sessionData, verified };
-    await redis.set(
-      `dataroom_session:${sessionToken}`,
-      JSON.stringify(updated),
-      {
-        pxat: sessionData.expiresAt,
-      },
-    );
-    return true;
+    return {
+      token: createSignedSessionToken(updated, DATAROOM_SESSION_PURPOSE),
+      expiresAt: updated.expiresAt,
+    };
   } catch {
-    return false;
+    return null;
   }
 }
 

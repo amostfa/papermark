@@ -17,8 +17,8 @@ import {
   Users,
 } from "lucide-react";
 
+import { constructLinkUrl } from "@/lib/self-host/link-domain";
 import { LinkWithViews } from "@/lib/types";
-
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,10 +50,7 @@ export default function LinkSuccessSheet({
 }: LinkSuccessSheetProps) {
   const [copied, setCopied] = useState(false);
 
-  const linkUrl =
-    link.domainId && link.slug
-      ? `https://${link.domainSlug}/${link.slug}`
-      : `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
+  const linkUrl = constructLinkUrl(link);
 
   const copyToClipboard = async () => {
     try {
@@ -85,7 +82,9 @@ export default function LinkSuccessSheet({
         <div className="flex-1 space-y-6 py-6">
           {/* Link Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium">Share Link to Your Data Room</h3>
+            <h3 className="text-sm font-medium">
+              Share Link to Your Data Room
+            </h3>
             <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
               <div className="flex-1 truncate font-mono text-sm">{linkUrl}</div>
               <Button

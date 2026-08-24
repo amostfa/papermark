@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 
 import { createPreviewSession } from "@/lib/auth/preview-auth";
+import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
@@ -19,11 +20,21 @@ export default async function handle(
     }
 
     const { id } = req.query as { id: string };
+    const userId = (session.user as CustomUser).id;
 
-    const previewSession = await createPreviewSession(
-      id,
-      (session.user as CustomUser).id,
-    );
+    const link = await prisma.link.findFirst({
+      where: {
+        id,
+        team: { users: { some: { userId } } },
+      },
+      select: { id: true },
+    });
+
+    if (!link) {
+      return res.status(404).json({ error: "Link not found." });
+    }
+
+    const previewSession = await createPreviewSession(id, userId);
 
     return res.status(200).json({ previewToken: previewSession.token });
   } else {

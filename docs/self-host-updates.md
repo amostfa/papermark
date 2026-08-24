@@ -90,6 +90,18 @@ and excludes any duplicate team custom-domain record for the same hostname.
 The custom-domain API and settings view exclude the application hostname as
 well. Background verification and every Vercel-domain removal path protect it,
 so stale database records cannot mark or remove the live application domain.
+Built-in share links always use the stable `/view/:linkId` route, including
+links that still reference a stale custom-domain row for the application host.
+Link creation and editing clear those stale relations when they are next saved.
+
+Preview and data-room viewer sessions are short-lived HMAC-signed tokens backed
+by `NEXTAUTH_SECRET`; they do not require Upstash Redis. When the general
+`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` variables are absent,
+request rate limits use a best-effort in-memory sliding window so core sharing
+and preview flows remain available. Configure general Upstash Redis when rate
+limits must be coordinated across multiple server instances or when using
+features that explicitly store queues, caches, or revocable sessions in Redis.
+These variables are separate from the optional TUS upload-locker variables.
 
 ## One-time GitHub setup
 

@@ -28,6 +28,7 @@ import {
 } from "@/lib/integrations/slack/events";
 import prisma from "@/lib/prisma";
 import { ratelimit } from "@/lib/redis";
+import { hasCustomLinkDomain } from "@/lib/self-host/link-domain";
 import { parseSheet } from "@/lib/sheet";
 import {
   getSignedAgreementAccessCookieName,
@@ -1042,7 +1043,7 @@ export async function POST(request: NextRequest) {
           const cookieId = `pm_drs_${linkId}`;
           let flagCookieId = `pm_drs_flag_${linkId}`;
 
-          if (link.domainId) {
+          if (hasCustomLinkDomain(link)) {
             basePath = `/${link.slug}`;
             flagCookieId = `pm_drs_flag_${link.slug}`;
           }
@@ -1513,7 +1514,7 @@ export async function POST(request: NextRequest) {
         let basePath = `/view/${linkId}`;
         const cookieId = `pm_drs_${linkId}`;
         let flagCookieId = `pm_drs_flag_${linkId}`;
-        if (link.domainId) {
+        if (hasCustomLinkDomain(link)) {
           basePath = `/${link.slug}`;
           flagCookieId = `pm_drs_flag_${link.slug}`;
         }

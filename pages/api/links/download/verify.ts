@@ -41,7 +41,12 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const { linkId, viewId: providedViewId, email, code } = req.body as {
+  const {
+    linkId,
+    viewId: providedViewId,
+    email,
+    code,
+  } = req.body as {
     linkId?: string;
     viewId?: string;
     email?: string;
@@ -49,9 +54,7 @@ export default async function handler(
   };
 
   if (!linkId || !email) {
-    return res
-      .status(400)
-      .json({ error: "linkId and email are required" });
+    return res.status(400).json({ error: "linkId and email are required" });
   }
 
   // Look up the view: use provided viewId if given, otherwise find by email + linkId
@@ -184,6 +187,13 @@ export default async function handler(
   const cookies = parse(req.headers.cookie || "");
   let sessionToken = cookies[`pm_drs_${linkId}`];
 
+  const setSessionCookie = (token: string, expiresAt: number) => {
+    const maxAge = Math.floor((expiresAt - Date.now()) / 1000);
+    res.setHeader("Set-Cookie", [
+      `pm_drs_${linkId}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax`,
+    ]);
+  };
+
   const needNewSession = async () => {
     if (!view.dataroomId) return;
     const ipAddressValue = getIpAddress(req.headers) ?? "unknown";
@@ -204,17 +214,17 @@ export default async function handler(
       fingerprint,
     );
     sessionToken = token;
-    const maxAge = Math.floor((expiresAt - Date.now()) / 1000);
-    res.setHeader("Set-Cookie", [
-      `pm_drs_${linkId}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Lax`,
-    ]);
+    setSessionCookie(token, expiresAt);
   };
 
   if (sessionToken) {
     const updated = await updateDataroomSessionVerified(sessionToken, true);
-    // If update failed (e.g. session expired and was deleted), create a new
-    // session so the next request (e.g. bulk) has a valid session.
-    if (!updated) {
+    // Signed sessions are immutable, so replace the cookie with the refreshed
+    // token. If the existing token is invalid or expired, create a new session.
+    if (updated) {
+      sessionToken = updated.token;
+      setSessionCookie(updated.token, updated.expiresAt);
+    } else {
       await needNewSession();
     }
   } else {

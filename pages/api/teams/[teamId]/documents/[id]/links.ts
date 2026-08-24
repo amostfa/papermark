@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { normalizeBuiltInLinkDomain } from "@/lib/self-host/link-domain";
 import { CustomUser } from "@/lib/types";
 import { decryptEncrpytedPassword, log } from "@/lib/utils";
 
@@ -24,7 +25,12 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     if (
-      await enforceDocumentMemberScope({ userId, teamId, documentId: docId, res })
+      await enforceDocumentMemberScope({
+        userId,
+        teamId,
+        documentId: docId,
+        res,
+      })
     ) {
       return;
     }
@@ -152,11 +158,11 @@ export default async function handle(
             ? decryptEncrpytedPassword(link.password)
             : null;
 
-        return {
+        return normalizeBuiltInLinkDomain({
           ...link,
           password: decryptedPassword,
           tags: tagsByLinkId[link.id] || [],
-        };
+        });
       });
 
       return res.status(200).json(linksWithTags);

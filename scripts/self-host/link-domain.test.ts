@@ -4,10 +4,14 @@ import test from "node:test";
 import {
   BUILT_IN_LINK_DOMAIN_VALUE,
   type LinkDomainEnvironment,
+  constructLinkUrl,
   getBuiltInLinkDomain,
   getCustomLinkDomains,
+  getLinkDisplayUrl,
   getProtectedLinkDomains,
+  hasCustomLinkDomain,
   isBuiltInLinkDomain,
+  normalizeBuiltInLinkDomain,
 } from "../../lib/self-host/link-domain.ts";
 
 const selfHostedEnvironment: LinkDomainEnvironment = {
@@ -76,4 +80,48 @@ test("the custom-domain choices exclude a duplicate application hostname", () =>
   assert.deepEqual(getCustomLinkDomains(domains, selfHostedEnvironment), [
     { slug: "deals.bonumworks.com", verified: true, isDefault: false },
   ]);
+});
+
+test("stale application-domain links use the stable built-in viewer route", () => {
+  const environment: LinkDomainEnvironment = {
+    ...selfHostedEnvironment,
+    marketingUrl: "https://docs.bonumworks.com",
+  };
+  const staleLink = {
+    id: "link_123",
+    domainId: "domain_123",
+    domainSlug: "docs.bonumworks.com",
+    slug: "old-short-link",
+  };
+
+  assert.equal(hasCustomLinkDomain(staleLink, environment), false);
+  assert.equal(
+    constructLinkUrl(staleLink, environment),
+    "https://docs.bonumworks.com/view/link_123",
+  );
+  assert.equal(
+    getLinkDisplayUrl(staleLink, environment),
+    "docs.bonumworks.com/view/link_123",
+  );
+  assert.deepEqual(normalizeBuiltInLinkDomain(staleLink, environment), {
+    id: "link_123",
+    domainId: null,
+    domainSlug: null,
+    slug: null,
+  });
+});
+
+test("verified custom domains retain their short share URL", () => {
+  const customLink = {
+    id: "link_123",
+    domainId: "domain_456",
+    domainSlug: "deals.bonumworks.com",
+    slug: "investor-room",
+  };
+
+  assert.equal(hasCustomLinkDomain(customLink, selfHostedEnvironment), true);
+  assert.equal(
+    constructLinkUrl(customLink, selfHostedEnvironment),
+    "https://deals.bonumworks.com/investor-room",
+  );
 });

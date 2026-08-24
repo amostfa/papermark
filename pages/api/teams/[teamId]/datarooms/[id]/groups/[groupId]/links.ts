@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { normalizeBuiltInLinkDomain } from "@/lib/self-host/link-domain";
 import { CustomUser, LinkWithViews } from "@/lib/types";
 import { decryptEncrpytedPassword, log } from "@/lib/utils";
 
@@ -137,10 +138,7 @@ export default async function handle(
               },
             });
 
-            return {
-              ...link,
-              tags,
-            };
+            return normalizeBuiltInLinkDomain({ ...link, tags });
           }),
         );
       }

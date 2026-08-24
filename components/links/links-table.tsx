@@ -37,9 +37,14 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
+import { buildLinkFormData } from "@/lib/links/build-link-form-data";
+import {
+  constructLinkUrl,
+  getLinkDisplayUrl,
+  hasCustomLinkDomain,
+} from "@/lib/self-host/link-domain";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
-import { buildLinkFormData } from "@/lib/links/build-link-form-data";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
@@ -84,7 +89,6 @@ import { Label } from "../ui/label";
 import { ButtonTooltip } from "../ui/tooltip";
 import { useDeleteLinkModal } from "./delete-link-modal";
 import EmbedCodeModal from "./embed-code-modal";
-import { useTransferLinkModal } from "./transfer-link-modal";
 import LinkActiveControls, {
   countActiveSettings,
 } from "./link-active-controls";
@@ -95,6 +99,7 @@ import LinkSheet, {
 import { DataroomLinkSheet } from "./link-sheet/dataroom-link-sheet";
 import { TagColumn } from "./link-sheet/tags/tag-details";
 import LinksVisitors from "./links-visitors";
+import { useTransferLinkModal } from "./transfer-link-modal";
 
 const BulkImportLinksModal = dynamic(
   () =>
@@ -110,22 +115,6 @@ const isDocumentProcessing = (version?: DocumentVersion) => {
     !version.hasPages &&
     ["pdf", "slides", "docs", "cad"].includes(version.type!)
   );
-};
-
-// Full URL helper
-const getFullUrl = (link: LinkWithViews) => {
-  if (link.domainId) {
-    return `https://${link.domainSlug}/${link.slug}`;
-  }
-  return `${process.env.NEXT_PUBLIC_MARKETING_URL}/view/${link.id}`;
-};
-
-// Display URL helper - shows the path portion that fits the cell
-const getDisplayUrl = (link: LinkWithViews) => {
-  if (link.domainId) {
-    return `${link.domainSlug}/${link.slug}`;
-  }
-  return `papermark.com/view/${link.id}`;
 };
 
 // Link URL cell component - displays URL with click-to-copy hover overlay
@@ -146,14 +135,14 @@ const LinkUrlCell = ({
   mutateDocument?: () => void;
   isPopoverOpen?: boolean;
 }) => {
-  const fullUrl = getFullUrl(link);
-  const displayUrl = getDisplayUrl(link);
+  const fullUrl = constructLinkUrl(link);
+  const displayUrl = getLinkDisplayUrl(link);
 
   return (
     <div
       className={cn(
         "group/url relative min-w-0 flex-1 cursor-pointer overflow-hidden rounded-md px-3 py-1.5 text-sm transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100",
-        link.domainId && isFree
+        hasCustomLinkDomain(link) && isFree
           ? "bg-destructive/10 text-destructive hover:bg-red-700 hover:dark:bg-red-200"
           : "bg-secondary text-secondary-foreground hover:bg-emerald-700 hover:dark:bg-emerald-200",
         isPopoverOpen && "ring-1 ring-gray-400 dark:ring-gray-100",
@@ -204,7 +193,7 @@ const LinkActionsCell = ({
   canInvite?: boolean;
 }) => {
   const [copied, setCopied] = useState(false);
-  const fullUrl = getFullUrl(link);
+  const fullUrl = constructLinkUrl(link);
 
   useEffect(() => {
     if (copied) {
@@ -427,7 +416,7 @@ export default function LinksTable({
   };
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && isFree) {
+    if (hasCustomLinkDomain(link) && isFree) {
       toast.error("You need to upgrade to preview this link");
       return;
     }
@@ -771,7 +760,7 @@ export default function LinksTable({
                               </span>
                             </TimestampTooltip>
                           ))}
-                        {link.domainId && isFree ? (
+                        {hasCustomLinkDomain(link) && isFree ? (
                           <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
                             Inactive
                           </span>
@@ -1039,10 +1028,12 @@ export default function LinksTable({
                               setSelectedEmbedLink({
                                 id: link.id,
                                 name: link.name || `Link #${link.id.slice(-5)}`,
-                                domain: link.domainId
+                                domain: hasCustomLinkDomain(link)
                                   ? link.domainSlug
                                   : null,
-                                slug: link.domainId ? link.slug : null,
+                                slug: hasCustomLinkDomain(link)
+                                  ? link.slug
+                                  : null,
                               });
                               setEmbedModalOpen(true);
                             }}

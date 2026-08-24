@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 
 import { enforceLinkMemberScope } from "@/lib/api/rbac/guard";
 import prisma from "@/lib/prisma";
+import { isBuiltInLinkDomain } from "@/lib/self-host/link-domain";
 import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
 import {
   decryptEncrpytedPassword,
@@ -232,8 +233,9 @@ export default async function handle(
 
     let { domain, slug, ...linkData } = linkDomainData;
 
-    // set domain and slug to null if the domain is papermark.com
-    if (domain && domain === "papermark.com") {
+    // Built-in links always use /view/:id. This also cleans up stale rows
+    // where the self-hosted application hostname was saved as custom.
+    if (domain && isBuiltInLinkDomain(domain)) {
       domain = null;
       slug = null;
     }
