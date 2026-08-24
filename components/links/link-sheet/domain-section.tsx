@@ -5,6 +5,7 @@ import {
   SetStateAction,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -16,6 +17,12 @@ import { customAlphabet } from "nanoid";
 import { mutate } from "swr";
 
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
+import {
+  BUILT_IN_LINK_DOMAIN_VALUE,
+  getBuiltInLinkDomain,
+  getCustomLinkDomains,
+  isBuiltInLinkDomain,
+} from "@/lib/self-host/link-domain";
 import { BasePlan, usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
@@ -42,6 +49,8 @@ const generateRandomSlug = customAlphabet(
   10,
 );
 
+const builtInLinkDomain = getBuiltInLinkDomain();
+
 export default function DomainSection({
   data,
   setData,
@@ -57,14 +66,18 @@ export default function DomainSection({
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  // Initialize displayValue from data.domain when editing, otherwise "papermark.com"
+  // The self-hosted app hostname is a built-in link domain, not a custom one.
   const [displayValue, setDisplayValue] = useState<string>(
-    editLink && data.domain ? data.domain : "papermark.com",
+    editLink && data.domain && !isBuiltInLinkDomain(data.domain)
+      ? data.domain
+      : BUILT_IN_LINK_DOMAIN_VALUE,
   );
   const teamInfo = useTeam();
   const { limits } = useLimits();
 
   const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
+
+  const customDomains = useMemo(() => getCustomLinkDomains(domains), [domains]);
 
   // Check plan eligibility for custom domains
   const canUseCustomDomainForDocument =
@@ -74,7 +87,7 @@ export default function DomainSection({
 
   // Check if we're editing a link with a custom domain
   const isEditingCustomDomain =
-    editLink && data.domain && data.domain !== "papermark.com" ? true : false;
+    editLink && data.domain && !isBuiltInLinkDomain(data.domain) ? true : false;
 
   const generateAndSetSlug = useCallback(() => {
     const newSlug = generateRandomSlug();
@@ -88,28 +101,34 @@ export default function DomainSection({
         : canUseCustomDomainForDataroom;
 
     if (isEditingCustomDomain && !canChangeCustomDomain) {
-      setDisplayValue(data.domain ?? "papermark.com");
+      setDisplayValue(data.domain ?? BUILT_IN_LINK_DOMAIN_VALUE);
       return;
     }
 
     // Handle opening the add domain modal
     if (value === "add_domain" || value === "add_dataroom_domain") {
       setModalOpen(true);
-      setData((prev) => ({ ...prev, domain: "papermark.com" }));
-      setDisplayValue("papermark.com");
+      setData((prev) => ({
+        ...prev,
+        domain: BUILT_IN_LINK_DOMAIN_VALUE,
+      }));
+      setDisplayValue(BUILT_IN_LINK_DOMAIN_VALUE);
       return;
     }
 
-    // Check if this is a custom domain selection (not papermark.com)
-    if (value !== "papermark.com") {
+    // Check if this is a custom domain selection.
+    if (value !== BUILT_IN_LINK_DOMAIN_VALUE) {
       // Show upgrade modal if user doesn't have the right plan
       if (
         (linkType === "DOCUMENT_LINK" && !canUseCustomDomainForDocument) ||
         (linkType === "DATAROOM_LINK" && !canUseCustomDomainForDataroom)
       ) {
         setUpgradeModalOpen(true);
-        setData((prev) => ({ ...prev, domain: "papermark.com" }));
-        setDisplayValue("papermark.com");
+        setData((prev) => ({
+          ...prev,
+          domain: BUILT_IN_LINK_DOMAIN_VALUE,
+        }));
+        setDisplayValue(BUILT_IN_LINK_DOMAIN_VALUE);
         return;
       }
 
@@ -134,8 +153,8 @@ export default function DomainSection({
   };
 
   useEffect(() => {
-    if (domains && !editLink) {
-      const defaultDomain = domains.find((domain) => domain.isDefault);
+    if (customDomains && !editLink) {
+      const defaultDomain = customDomains.find((domain) => domain.isDefault);
 
       // Only set a custom domain if the plan allows it
       const canUseCustomDomain =
@@ -143,12 +162,12 @@ export default function DomainSection({
         (linkType === "DATAROOM_LINK" && canUseCustomDomainForDataroom);
 
       const domainValue = canUseCustomDomain
-        ? (defaultDomain?.slug ?? "papermark.com")
-        : "papermark.com";
+        ? (defaultDomain?.slug ?? BUILT_IN_LINK_DOMAIN_VALUE)
+        : BUILT_IN_LINK_DOMAIN_VALUE;
 
       // Auto-generate a slug when a custom domain is auto-selected as default
       const isCustomDomain =
-        domainValue !== "papermark.com" && canUseCustomDomain;
+        domainValue !== BUILT_IN_LINK_DOMAIN_VALUE && canUseCustomDomain;
 
       setData((prev) => ({
         ...prev,
@@ -159,29 +178,49 @@ export default function DomainSection({
       setDisplayValue(domainValue);
     }
   }, [
-    domains,
+    customDomains,
     editLink,
     linkType,
-    isBusiness,
-    isDatarooms,
-    isDataroomsPlus,
-    limits,
+    canUseCustomDomainForDocument,
+    canUseCustomDomainForDataroom,
+    setData,
   ]);
 
   // Set defaultDomain based on plan type and link type
   const defaultDomain = editLink
-    ? (data.domain ?? "papermark.com")
+    ? data.domain && !isBuiltInLinkDomain(data.domain)
+      ? data.domain
+      : BUILT_IN_LINK_DOMAIN_VALUE
     : (linkType === "DOCUMENT_LINK" && canUseCustomDomainForDocument) ||
         (linkType === "DATAROOM_LINK" && canUseCustomDomainForDataroom)
-      ? (domains?.find((domain) => domain.isDefault)?.slug ?? "papermark.com")
-      : "papermark.com";
+      ? (customDomains?.find((domain) => domain.isDefault)?.slug ??
+        BUILT_IN_LINK_DOMAIN_VALUE)
+      : BUILT_IN_LINK_DOMAIN_VALUE;
 
   // Set the initial display value when component mounts
   useEffect(() => {
     setDisplayValue(defaultDomain);
   }, [defaultDomain, editLink]);
 
-  const currentDomain = domains?.find((domain) => domain.slug === data.domain);
+  useEffect(() => {
+    if (
+      editLink &&
+      data.domain &&
+      data.domain !== BUILT_IN_LINK_DOMAIN_VALUE &&
+      isBuiltInLinkDomain(data.domain)
+    ) {
+      setData((prev) => ({
+        ...prev,
+        domain: BUILT_IN_LINK_DOMAIN_VALUE,
+        slug: null,
+      }));
+    }
+  }, [data.domain, editLink, setData]);
+
+  const hasCustomDomain = !isBuiltInLinkDomain(data.domain);
+  const currentDomain = customDomains?.find(
+    (domain) => domain.slug === data.domain,
+  );
   const isDomainVerified = currentDomain?.verified;
 
   const isSlugInvalid =
@@ -207,20 +246,21 @@ export default function DomainSection({
           <SelectTrigger
             className={cn(
               "flex h-10 w-full rounded-none rounded-l-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm",
-              data.domain && data.domain !== "papermark.com"
-                ? ""
-                : "border-r-1 rounded-r-md",
+              hasCustomDomain ? "" : "border-r-1 rounded-r-md",
             )}
           >
             <SelectValue placeholder="Select a domain" />
           </SelectTrigger>
           <SelectContent className="flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
-            <SelectItem value="papermark.com" className="hover:bg-muted">
-              papermark.com
+            <SelectItem
+              value={BUILT_IN_LINK_DOMAIN_VALUE}
+              className="hover:bg-muted"
+            >
+              {builtInLinkDomain}
             </SelectItem>
             {linkType === "DOCUMENT_LINK" && (
               <>
-                {domains?.map(({ slug }) => (
+                {customDomains?.map(({ slug }) => (
                   <SelectItem
                     key={slug}
                     value={slug}
@@ -239,7 +279,7 @@ export default function DomainSection({
             )}
             {linkType === "DATAROOM_LINK" && (
               <>
-                {domains?.map(({ slug }) => (
+                {customDomains?.map(({ slug }) => (
                   <SelectItem
                     key={slug}
                     value={slug}
@@ -269,7 +309,7 @@ export default function DomainSection({
           </SelectContent>
         </Select>
 
-        {data.domain && data.domain !== "papermark.com" ? (
+        {hasCustomDomain ? (
           <>
             <Input
               type="text"
@@ -303,7 +343,7 @@ export default function DomainSection({
               autoComplete="off"
               className={cn(
                 "hidden rounded-none focus:ring-inset",
-                data.domain && data.domain !== "papermark.com" ? "flex" : "",
+                hasCustomDomain ? "flex" : "",
                 isDisabled ? "opacity-50" : "",
               )}
               placeholder="deck"
@@ -359,7 +399,7 @@ export default function DomainSection({
         </div>
       )}
 
-      {data.domain && data.domain !== "papermark.com" && !isDomainVerified ? (
+      {hasCustomDomain && !isDomainVerified ? (
         <div className="mt-4 text-sm text-red-500">
           Your domain is not verified yet!{" "}
           <Link

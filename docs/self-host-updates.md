@@ -85,6 +85,8 @@ document-view custom-domain routing. Otherwise a self-hosted application domain
 such as `docs.bonumworks.com` is rewritten as a viewer vanity domain. The same
 check rejects an upstream update that drops this exception, and the production
 smoke test sends its login request through a non-Papermark app hostname.
+The link sheet presents this application hostname as its built-in share domain
+and excludes any duplicate team custom-domain record for the same hostname.
 
 ## One-time GitHub setup
 
