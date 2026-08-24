@@ -87,6 +87,9 @@ check rejects an upstream update that drops this exception, and the production
 smoke test sends its login request through a non-Papermark app hostname.
 The link sheet presents this application hostname as its built-in share domain
 and excludes any duplicate team custom-domain record for the same hostname.
+The custom-domain API and settings view exclude the application hostname as
+well. Background verification and every Vercel-domain removal path protect it,
+so stale database records cannot mark or remove the live application domain.
 
 ## One-time GitHub setup
 

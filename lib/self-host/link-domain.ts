@@ -1,5 +1,10 @@
 export const BUILT_IN_LINK_DOMAIN_VALUE = "papermark.com";
 
+const LEGACY_BUILT_IN_LINK_DOMAINS = [
+  "papermark.io",
+  BUILT_IN_LINK_DOMAIN_VALUE,
+] as const;
+
 export type LinkDomainEnvironment = Readonly<{
   selfHosted?: string;
   appBaseHost?: string;
@@ -50,10 +55,18 @@ export function isBuiltInLinkDomain(
   if (!domain) return true;
 
   const normalizedDomain = normalizeHost(domain);
-  return (
-    normalizedDomain === BUILT_IN_LINK_DOMAIN_VALUE ||
-    normalizedDomain === getBuiltInLinkDomain(environment)
-  );
+  return getProtectedLinkDomains(environment).includes(normalizedDomain ?? "");
+}
+
+export function getProtectedLinkDomains(
+  environment?: LinkDomainEnvironment,
+): string[] {
+  return [
+    ...new Set([
+      ...LEGACY_BUILT_IN_LINK_DOMAINS,
+      getBuiltInLinkDomain(environment),
+    ]),
+  ];
 }
 
 export function getCustomLinkDomains<T extends { slug: string }>(

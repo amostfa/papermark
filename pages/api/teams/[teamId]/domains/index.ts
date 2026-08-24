@@ -7,6 +7,10 @@ import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import {
+  getCustomLinkDomains,
+  isBuiltInLinkDomain,
+} from "@/lib/self-host/link-domain";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -55,7 +59,7 @@ export default async function handle(
         },
       });
 
-      return res.status(200).json(domains);
+      return res.status(200).json(getCustomLinkDomains(domains) ?? []);
     } catch (error) {
       errorhandler(error, res);
     }
@@ -107,6 +111,12 @@ export default async function handle(
         return res
           .status(400)
           .json({ message: "Domain cannot contain 'papermark'" });
+      }
+
+      if (isBuiltInLinkDomain(sanitizedDomain)) {
+        return res.status(400).json({
+          message: "The application domain cannot be added as a custom domain.",
+        });
       }
 
       // Check if domain already exists

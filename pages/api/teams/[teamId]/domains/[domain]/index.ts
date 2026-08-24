@@ -12,6 +12,7 @@ import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { getApexDomain, removeDomainFromVercel } from "@/lib/domains";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
+import { isBuiltInLinkDomain } from "@/lib/self-host/link-domain";
 import { CustomUser } from "@/lib/types";
 import { log } from "@/lib/utils";
 
@@ -37,6 +38,12 @@ export default async function handle(
 
     if (!domain) {
       return res.status(400).json("Domain is required for deletion");
+    }
+
+    if (isBuiltInLinkDomain(domain)) {
+      return res
+        .status(400)
+        .json({ message: "The application domain cannot be deleted." });
     }
 
     try {

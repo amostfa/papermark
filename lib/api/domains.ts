@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { isBuiltInLinkDomain } from "@/lib/self-host/link-domain";
 
 import { getApexDomain, removeDomainFromVercel } from "../domains";
 
@@ -31,6 +32,10 @@ export async function deleteDomain(
     skipPrismaDelete = false,
   } = {},
 ) {
+  if (isBuiltInLinkDomain(domain)) {
+    throw new Error("The application domain cannot be deleted.");
+  }
+
   const domainCount = await getDomainCount(domain);
 
   return await Promise.allSettled([

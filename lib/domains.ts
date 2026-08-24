@@ -4,6 +4,8 @@ import {
   DomainVerificationResponse,
 } from "@/lib/types";
 
+import { isBuiltInLinkDomain } from "./self-host/link-domain";
+
 export const addDomainToVercel = async (domain: string) => {
   return await fetch(
     `https://api.vercel.com/v10/projects/${process.env.PROJECT_ID_VERCEL}/domains?teamId=${process.env.TEAM_ID_VERCEL}`,
@@ -21,6 +23,10 @@ export const addDomainToVercel = async (domain: string) => {
 };
 
 export const removeDomainFromVercelProject = async (domain: string) => {
+  if (isBuiltInLinkDomain(domain)) {
+    return { skipped: true };
+  }
+
   return await fetch(
     `https://api.vercel.com/v9/projects/${process.env.PROJECT_ID_VERCEL}/domains/${domain}?teamId=${process.env.TEAM_ID_VERCEL}`,
     {
@@ -33,6 +39,10 @@ export const removeDomainFromVercelProject = async (domain: string) => {
 };
 
 export const removeDomainFromVercelTeam = async (domain: string) => {
+  if (isBuiltInLinkDomain(domain)) {
+    return { skipped: true };
+  }
+
   return await fetch(
     `https://api.vercel.com/v6/domains/${domain}?teamId=${process.env.TEAM_ID_VERCEL}`,
     {

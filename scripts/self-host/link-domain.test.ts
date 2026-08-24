@@ -6,6 +6,7 @@ import {
   type LinkDomainEnvironment,
   getBuiltInLinkDomain,
   getCustomLinkDomains,
+  getProtectedLinkDomains,
   isBuiltInLinkDomain,
 } from "../../lib/self-host/link-domain.ts";
 
@@ -56,6 +57,14 @@ test("the application host is not treated as a custom domain", () => {
     isBuiltInLinkDomain("recipient.example.com", selfHostedEnvironment),
     false,
   );
+});
+
+test("background domain management protects every built-in hostname", () => {
+  assert.deepEqual(getProtectedLinkDomains(selfHostedEnvironment), [
+    "papermark.io",
+    "papermark.com",
+    "docs.bonumworks.com",
+  ]);
 });
 
 test("the custom-domain choices exclude a duplicate application hostname", () => {

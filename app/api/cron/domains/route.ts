@@ -7,6 +7,7 @@ import {
   verifyDomain,
 } from "@/lib/domains";
 import prisma from "@/lib/prisma";
+import { getProtectedLinkDomains } from "@/lib/self-host/link-domain";
 import { log } from "@/lib/utils";
 
 import { handleDomainUpdates } from "./utils";
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
       where: {
         slug: {
           not: {
-            in: ["papermark.io", "papermark.com"],
+            in: getProtectedLinkDomains(),
           },
         },
       },
