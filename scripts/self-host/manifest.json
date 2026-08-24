@@ -10,6 +10,7 @@
     ".github/workflows/self-host-ci.yml",
     ".github/workflows/upstream-self-host-sync.yml",
     "components/layouts/mobile-more-menu.tsx",
+    "components/links/link-sheet/dataroom-link-sheet.tsx",
     "docs/self-host-updates.md",
     "lib/self-host/entitlements.ts",
     "lib/swr/use-geo-currency.ts",

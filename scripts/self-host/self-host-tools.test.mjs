@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { auditBoundary, listEeFiles } from "./boundary-lib.mjs";
+import { auditBoundary, listEeFiles, repositoryRoot } from "./boundary-lib.mjs";
 import {
   mergeInProgress,
   reapplyEeOverlay,
@@ -37,6 +37,25 @@ const fixtureManifest = {
     wildcard: { specifier: "@/ee/*", target: "./ee/stubs" },
   },
 };
+
+test("self-hosted dataroom sharing renders the core link sheet", async () => {
+  const componentPath = "components/links/link-sheet/dataroom-link-sheet.tsx";
+  const source = await readFile(
+    path.join(repositoryRoot, componentPath),
+    "utf8",
+  );
+  const manifest = JSON.parse(
+    await readFile(
+      path.join(repositoryRoot, "scripts/self-host/manifest.json"),
+      "utf8",
+    ),
+  );
+
+  assert.ok(source.includes('import LinkSheet from "./index";'));
+  assert.match(source, /<LinkSheet/);
+  assert.doesNotMatch(source, /DataroomLinkSheetEE/);
+  assert.ok(manifest.selfHostFiles.includes(componentPath));
+});
 
 test("boundary audit rejects new EE files, relative imports, and exports", async () => {
   await withTemporaryDirectory(async (root) => {

@@ -15,6 +15,11 @@ an upstream regression fail CI instead of silently restoring the payment wall.
 Shared Slack and billing-currency hooks also stay dormant in self-host mode, and
 the desktop and mobile navigation omit their SaaS-only controls.
 
+Dataroom sharing uses the core link sheet in this fork, so creating and editing
+standard and group links remains functional without the Enterprise Edition
+sheet. Granular per-file permissions remain unavailable in the self-hosted
+fallback.
+
 Passkey login is optional. Configure both `HANKO_API_KEY` and
 `NEXT_PUBLIC_HANKO_TENANT_ID` to enable it; when either is absent, the provider
 and login control remain disabled without blocking the build.
